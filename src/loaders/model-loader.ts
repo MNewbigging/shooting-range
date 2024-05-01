@@ -43,26 +43,16 @@ export class ModelLoader {
 
   private loadModels = () => {
     const gltfLoader = new GLTFLoader(this.loadingManager);
-    this.loadKenneyBox(gltfLoader);
+    this.loadScene(gltfLoader);
 
     const fbxLoader = new FBXLoader(this.loadingManager);
     this.loadSyntyModel(fbxLoader);
   };
 
-  private loadKenneyBox(loader: GLTFLoader) {
-    const boxUrl = new URL("/box-small.glb", import.meta.url).href;
-    loader.load(boxUrl, (gltf) => {
-      // Traverse the gltf scene
-      gltf.scene.traverse((child) => {
-        const node = child as THREE.Mesh;
-        if (node.isMesh) {
-          // https://kenney.nl/ assets need their metalness reducing to render correctly
-          const mat = node.material as THREE.MeshStandardMaterial;
-          mat.metalness = 0;
-        }
-      });
-
-      this.models.set("box", gltf.scene);
+  private loadScene(loader: GLTFLoader) {
+    const sceneUrl = new URL("/shootingRange.glb", import.meta.url).href;
+    loader.load(sceneUrl, (gltf) => {
+      this.models.set("shooting-range", gltf.scene);
     });
   }
 

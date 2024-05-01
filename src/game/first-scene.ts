@@ -44,17 +44,13 @@ export class FirstScene {
     const ambientLight = new THREE.AmbientLight(undefined, 0.25);
     this.scene.add(ambientLight);
 
-    const directLight = new THREE.DirectionalLight(undefined, Math.PI);
+    const directLight = new THREE.DirectionalLight(undefined, Math.PI / 2);
     directLight.position.copy(new THREE.Vector3(0.75, 1, 0.75).normalize());
     this.scene.add(directLight);
   }
 
   private setupObjects() {
-    const box = this.gameLoader.modelLoader.get("box");
-    this.scene.add(box);
-
-    const bandit = this.gameLoader.modelLoader.get("bandit");
-    bandit.position.z = -0.5;
-    this.scene.add(bandit);
+    const range = this.gameLoader.modelLoader.get("shooting-range");
+    this.scene.add(range);
   }
 }

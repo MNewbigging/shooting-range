@@ -36,6 +36,7 @@ export class FirstScene {
   private setupCamera() {
     this.camera.fov = 75;
     this.camera.far = 500;
+    this.camera.near = 0.1;
     const canvas = this.renderer.domElement;
     this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
     this.camera.position.set(0, 1.7, 2);
@@ -56,13 +57,21 @@ export class FirstScene {
     const range = modelLoader.get("shooting-range");
     this.scene.add(range);
 
+    // Pistol model setup
     const pistol = modelLoader.get("pistol");
-    pistol.position.set(-1, 1.8, 0);
-
     const pistolTex = textureLoader.get("weapon-26");
     if (pistolTex) {
       TextureLoader.applyModelTexture(pistol, pistolTex);
     }
+
+    // Position gun in front of camera
+    const position = this.camera.position.clone();
+    const lookDir = this.camera.getWorldDirection(new THREE.Vector3());
+    position.add(lookDir.multiplyScalar(0.25));
+    position.x += 0.15;
+    position.y -= 0.25;
+
+    pistol.position.copy(position);
 
     this.scene.add(pistol);
   }

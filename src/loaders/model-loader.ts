@@ -43,6 +43,7 @@ export class ModelLoader {
     this.loadScene(gltfLoader);
 
     const fbxLoader = new FBXLoader(this.loadingManager);
+    this.loadPistol(fbxLoader);
   };
 
   private loadScene(loader: GLTFLoader) {
@@ -52,14 +53,17 @@ export class ModelLoader {
     });
   }
 
+  private loadPistol(loader: FBXLoader) {
+    const pistolUrl = new URL("/models/pistol.fbx", import.meta.url).href;
+    loader.load(pistolUrl, (group) => {
+      this.scaleSyntyModel(group);
+      this.models.set("pistol", group);
+    });
+  }
+
   private loadSyntyModel(loader: FBXLoader) {
     const url = new URL("/bandit.fbx", import.meta.url).href;
     loader.load(url, (group) => {
-      // const texture = this.textureLoader.get("bandit");
-      // if (texture) {
-      //   this.applyModelTexture(group, texture);
-      // }
-
       this.scaleSyntyModel(group);
       this.models.set("bandit", group);
     });

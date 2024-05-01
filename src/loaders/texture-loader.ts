@@ -24,15 +24,34 @@ export class TextureLoader {
 
   private loadTextures() {
     const loader = new THREE.TextureLoader(this.loadingManager);
-    this.loadWeaponSkin1Texture(loader);
+    this.getNameUrlMap().forEach((url, name) => {
+      loader.load(url, (texture) => {
+        texture.encoding = THREE.sRGBEncoding;
+        this.textures.set(name, texture);
+      });
+    });
   }
 
-  private loadWeaponSkin1Texture(loader: THREE.TextureLoader) {
-    const url = new URL("/textures/Wep_Skin_01.png", import.meta.url).href;
-    loader.load(url, (texture) => {
-      // So colours don't look washed out
-      texture.encoding = THREE.sRGBEncoding;
-      this.textures.set("weapon-01", texture);
+  private getNameUrlMap() {
+    const nameUrlMap = new Map<string, string>();
+
+    const wep01Url = new URL("/textures/Wep_Skin_01.png", import.meta.url).href;
+    nameUrlMap.set("weapon-01", wep01Url);
+
+    const wep26Url = new URL("/textures/Wep_Skin_26.png", import.meta.url).href;
+    nameUrlMap.set("weapon-26", wep26Url);
+
+    return nameUrlMap;
+  }
+
+  static applyModelTexture(object: THREE.Object3D, texture: THREE.Texture) {
+    object.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const mat = child.material as THREE.MeshLambertMaterial;
+        mat.map = texture;
+        // Synty models have this true by default, making model black
+        mat.vertexColors = false;
+      }
     });
   }
 }

@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GameLoader } from "../loaders/game-loader";
+import { TextureLoader } from "../loaders/texture-loader";
 
 export class FirstScene {
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera();
-  //private controls: OrbitControls;
+  private controls: OrbitControls;
 
   constructor(
     private renderer: THREE.WebGLRenderer,
@@ -15,9 +16,9 @@ export class FirstScene {
     this.setupLights();
     this.setupObjects();
 
-    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    // this.controls.enableDamping = true;
-    // this.controls.target.set(0, 1, 0);
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.target.set(0, 1, 0);
 
     this.scene.background = new THREE.Color("#1680AF");
   }
@@ -27,7 +28,7 @@ export class FirstScene {
   }
 
   update(dt: number) {
-    //this.controls.update();
+    this.controls.update();
 
     this.renderer.render(this.scene, this.camera);
   }
@@ -50,7 +51,19 @@ export class FirstScene {
   }
 
   private setupObjects() {
-    const range = this.gameLoader.modelLoader.get("shooting-range");
+    const { modelLoader, textureLoader } = this.gameLoader;
+
+    const range = modelLoader.get("shooting-range");
     this.scene.add(range);
+
+    const pistol = modelLoader.get("pistol");
+    pistol.position.set(-1, 1.8, 0);
+
+    const pistolTex = textureLoader.get("weapon-26");
+    if (pistolTex) {
+      TextureLoader.applyModelTexture(pistol, pistolTex);
+    }
+
+    this.scene.add(pistol);
   }
 }

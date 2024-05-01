@@ -6,11 +6,9 @@ import { TextureLoader } from "./texture-loader";
 
 export class ModelLoader {
   doneLoading = false;
-  readonly models = new Map<string, THREE.Object3D>();
 
+  private models = new Map<string, THREE.Object3D>();
   private loadingManager = new THREE.LoadingManager();
-
-  private textureLoader = new TextureLoader();
 
   get(modelName: string): THREE.Object3D {
     // Return the model if found
@@ -37,8 +35,7 @@ export class ModelLoader {
       onLoad();
     };
 
-    // Load textures for models first, then models
-    this.textureLoader.load(this.loadModels);
+    this.loadModels();
   }
 
   private loadModels = () => {
@@ -46,11 +43,10 @@ export class ModelLoader {
     this.loadScene(gltfLoader);
 
     const fbxLoader = new FBXLoader(this.loadingManager);
-    this.loadSyntyModel(fbxLoader);
   };
 
   private loadScene(loader: GLTFLoader) {
-    const sceneUrl = new URL("/shootingRange.glb", import.meta.url).href;
+    const sceneUrl = new URL("/models/shootingRange.glb", import.meta.url).href;
     loader.load(sceneUrl, (gltf) => {
       this.models.set("shooting-range", gltf.scene);
     });
@@ -59,10 +55,10 @@ export class ModelLoader {
   private loadSyntyModel(loader: FBXLoader) {
     const url = new URL("/bandit.fbx", import.meta.url).href;
     loader.load(url, (group) => {
-      const texture = this.textureLoader.get("bandit");
-      if (texture) {
-        this.applyModelTexture(group, texture);
-      }
+      // const texture = this.textureLoader.get("bandit");
+      // if (texture) {
+      //   this.applyModelTexture(group, texture);
+      // }
 
       this.scaleSyntyModel(group);
       this.models.set("bandit", group);

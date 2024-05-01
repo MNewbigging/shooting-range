@@ -5,7 +5,7 @@ import { GameLoader } from "../loaders/game-loader";
 export class FirstScene {
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera();
-  private controls: OrbitControls;
+  //private controls: OrbitControls;
 
   constructor(
     private renderer: THREE.WebGLRenderer,
@@ -15,9 +15,9 @@ export class FirstScene {
     this.setupLights();
     this.setupObjects();
 
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
-    this.controls.target.set(0, 1, 0);
+    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // this.controls.enableDamping = true;
+    // this.controls.target.set(0, 1, 0);
 
     this.scene.background = new THREE.Color("#1680AF");
   }
@@ -27,7 +27,7 @@ export class FirstScene {
   }
 
   update(dt: number) {
-    this.controls.update();
+    //this.controls.update();
 
     this.renderer.render(this.scene, this.camera);
   }
@@ -37,7 +37,7 @@ export class FirstScene {
     this.camera.far = 500;
     const canvas = this.renderer.domElement;
     this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    this.camera.position.set(0, 1.5, 3);
+    this.camera.position.set(0, 1.7, 2);
   }
 
   private setupLights() {

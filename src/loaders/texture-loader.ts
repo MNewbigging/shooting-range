@@ -24,15 +24,15 @@ export class TextureLoader {
 
   private loadTextures() {
     const loader = new THREE.TextureLoader(this.loadingManager);
-    this.loadBanditTexture(loader);
+    this.loadWeaponSkin1Texture(loader);
   }
 
-  private loadBanditTexture(loader: THREE.TextureLoader) {
-    const url = new URL("/bandit-texture.png", import.meta.url).href;
+  private loadWeaponSkin1Texture(loader: THREE.TextureLoader) {
+    const url = new URL("/textures/Wep_Skin_01.png", import.meta.url).href;
     loader.load(url, (texture) => {
       // So colours don't look washed out
       texture.encoding = THREE.sRGBEncoding;
-      this.textures.set("bandit", texture);
+      this.textures.set("weapon-01", texture);
     });
   }
 }

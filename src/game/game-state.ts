@@ -1,8 +1,6 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 import { GameLoader } from "../loaders/game-loader";
-import { addGui } from "../utils/utils";
 import { FirstScene } from "./first-scene";
 
 export class GameState {
@@ -24,6 +22,7 @@ export class GameState {
     const canvas = this.renderer.domElement;
     const canvasRoot = document.getElementById("canvas-root");
     canvasRoot?.appendChild(canvas);
+    canvas.requestPointerLock();
 
     this.firstScene = new FirstScene(this.renderer, this.gameLoader);
 

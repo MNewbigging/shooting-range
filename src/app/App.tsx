@@ -13,7 +13,7 @@ interface AppProps {
 export const App: React.FC<AppProps> = observer(({ appState }) => {
   return (
     <div id="canvas-root">
-      {appState.gameLoader.loading && <LoadingScreen />}
+      {!appState.gameState && <LoadingScreen appState={appState} />}
     </div>
   );
 });

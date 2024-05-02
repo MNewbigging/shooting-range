@@ -15,7 +15,7 @@ export class FirstScene {
 
   private gun: THREE.Object3D;
   private canFire = true;
-  private bulletHoleMat: THREE.MeshPhongMaterial;
+  private bulletHoleMat: THREE.MeshBasicMaterial;
   private decalHelper = new THREE.Object3D();
   private decalSize = new THREE.Vector3(0.1, 0.1, 0.1);
 
@@ -52,9 +52,6 @@ export class FirstScene {
 
     // Draw
     this.renderer.render(this.scene, this.camera);
-
-    // Post update
-    this.mouseListener.postUpdate();
   }
 
   private setupCamera() {

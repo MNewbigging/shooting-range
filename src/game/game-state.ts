@@ -34,7 +34,7 @@ export class GameState {
     canvas.requestPointerLock();
 
     // Listeners
-    this.mouseListener = new MouseListener(canvas);
+    this.mouseListener = new MouseListener();
     this.keyboardListener = new KeyboardListener();
 
     this.firstScene = new FirstScene(

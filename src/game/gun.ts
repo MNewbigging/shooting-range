@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry";
 import { GameLoader } from "../loaders/game-loader";
-import { MouseListener } from "../listeners/mouse-listener";
+import { MouseButton, MouseListener } from "../listeners/mouse-listener";
 import { TextureLoader } from "../loaders/texture-loader";
 
 export interface GunProps {
@@ -24,6 +24,7 @@ export class Gun {
 
   constructor(
     private readonly gameLoader: GameLoader,
+    private readonly mouseListener: MouseListener,
     private readonly scene: THREE.Scene,
     private readonly camera: THREE.PerspectiveCamera,
     private readonly props: GunProps
@@ -40,6 +41,7 @@ export class Gun {
 
   update(dt: number, elapsed: number) {
     this.firingMode.update(dt);
+
     // Probably shouldn't do this when firing though...
     //this.idle(elapsed);
   }
@@ -81,12 +83,14 @@ export class Gun {
   private getFiringMode(name: FiringModeName) {
     if (name === "auto") {
       return (this.firingMode = new AutomaticFiringMode(
+        this.mouseListener,
         this.props.rpm,
         this.fire
       ));
     }
 
     return (this.firingMode = new SemiAutoFiringMode(
+      this.mouseListener,
       this.props.rpm,
       this.fire
     ));
@@ -167,18 +171,16 @@ abstract class FiringMode {
 }
 
 class AutomaticFiringMode extends FiringMode {
-  lmb = false;
-
-  constructor(rpm: number, fire: () => void) {
+  constructor(
+    private mouseListener: MouseListener,
+    rpm: number,
+    fire: () => void
+  ) {
     super(rpm, fire);
-
-    window.addEventListener("mousedown", this.onMouseDown);
-    window.addEventListener("mouseup", this.onMouseUp);
   }
 
-  override disable() {
-    window.removeEventListener("mousedown", this.onMouseDown);
-    window.removeEventListener("mouseup", this.onMouseUp);
+  disable(): void {
+    //
   }
 
   update() {
@@ -188,46 +190,32 @@ class AutomaticFiringMode extends FiringMode {
   }
 
   private canFire() {
-    return this.lmb && this.shotTimer <= 0;
+    return this.mouseListener.lmb && this.shotTimer <= 0;
   }
-
-  private onMouseDown = (e: MouseEvent) => {
-    this.lmb = e.button === 0;
-  };
-
-  private onMouseUp = (e: MouseEvent) => {
-    this.lmb = !(e.button === 0);
-  };
 }
 
 class SemiAutoFiringMode extends FiringMode {
-  lmbWasReleased = true;
-
-  constructor(rpm: number, fire: () => void) {
+  constructor(
+    private mouseListener: MouseListener,
+    rpm: number,
+    fire: () => void
+  ) {
     super(rpm, fire);
 
-    window.addEventListener("mousedown", this.onMouseDown);
-    window.addEventListener("mouseup", this.onMouseUp);
+    this.mouseListener.addListener("mousedown", this.onMouseDown);
   }
 
   override disable() {
-    window.removeEventListener("mousedown", this.onMouseDown);
-    window.removeEventListener("mouseup", this.onMouseUp);
+    this.mouseListener.removeListener("mousedown", this.onMouseDown);
   }
 
   private canFire() {
-    return this.lmbWasReleased && this.shotTimer <= 0;
+    return this.shotTimer <= 0;
   }
 
-  private onMouseDown = (e: MouseEvent) => {
-    if (e.button === 0 && this.canFire()) {
+  private onMouseDown = () => {
+    if (this.canFire()) {
       this.onFire();
-    }
-  };
-
-  private onMouseUp = (e: MouseEvent) => {
-    if (e.button === 0) {
-      this.lmbWasReleased = true;
     }
   };
 }

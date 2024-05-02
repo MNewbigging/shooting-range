@@ -58,6 +58,7 @@ export class GameState {
   resumeGame = () => {
     this.renderer.domElement.requestPointerLock();
     this.paused = false;
+    this.mouseListener.enable();
   };
 
   private onCanvasResize = () => {
@@ -76,13 +77,18 @@ export class GameState {
   private onPointerLockChange = () => {
     // If exiting
     if (document.pointerLockElement !== this.renderer.domElement) {
-      this.paused = true;
+      this.pauseGame();
     }
   };
 
   private onPointerLockError = () => {
-    this.paused = true;
+    this.pauseGame();
   };
+
+  private pauseGame() {
+    this.paused = true;
+    this.mouseListener.disable();
+  }
 
   private update = () => {
     requestAnimationFrame(this.update);

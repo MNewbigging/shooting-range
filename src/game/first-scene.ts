@@ -67,10 +67,16 @@ export class FirstScene {
   }
 
   private setupGun() {
-    return new Gun(this.gameLoader, this.scene, this.camera, {
-      name: "pistol",
-      firingModeName: "semi-auto",
-      rpm: 120,
-    });
+    return new Gun(
+      this.gameLoader,
+      this.mouseListener,
+      this.scene,
+      this.camera,
+      {
+        name: "pistol",
+        firingModeName: "semi-auto",
+        rpm: 420,
+      }
+    );
   }
 }

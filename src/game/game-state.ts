@@ -2,14 +2,19 @@ import * as THREE from "three";
 
 import { GameLoader } from "../loaders/game-loader";
 import { FirstScene } from "./first-scene";
+import { makeAutoObservable, observable } from "mobx";
 
 export class GameState {
+  @observable paused = false;
+
   private renderer: THREE.WebGLRenderer;
   private clock = new THREE.Clock();
 
   private firstScene: FirstScene;
 
   constructor(private gameLoader: GameLoader) {
+    makeAutoObservable(this);
+
     // Setup renderer
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -30,9 +35,17 @@ export class GameState {
     window.addEventListener("resize", this.onCanvasResize);
     this.onCanvasResize();
 
+    // Handle pointer lock events
+    document.addEventListener("pointerlockchange", this.onPointerLockChange);
+
     // Start game
     this.update();
   }
+
+  resumeGame = () => {
+    this.renderer.domElement.requestPointerLock();
+    this.paused = false;
+  };
 
   private onCanvasResize = () => {
     const canvas = this.renderer.domElement;
@@ -47,12 +60,22 @@ export class GameState {
     camera.updateProjectionMatrix();
   };
 
+  private onPointerLockChange = () => {
+    // If exiting
+    if (document.pointerLockElement !== this.renderer.domElement) {
+      console.log("left pointer lock");
+      this.paused = true;
+    }
+  };
+
   private update = () => {
     requestAnimationFrame(this.update);
 
     const dt = this.clock.getDelta();
     const elapsed = this.clock.getElapsedTime();
 
-    this.firstScene.update(dt, elapsed);
+    if (!this.paused) {
+      this.firstScene.update(dt, elapsed);
+    }
   };
 }

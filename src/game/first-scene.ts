@@ -3,6 +3,7 @@ import { PointerLockControls } from "three/examples/jsm/controls/PointerLockCont
 import { GameLoader } from "../loaders/game-loader";
 import { TextureLoader } from "../loaders/texture-loader";
 import { MouseListener } from "../listeners/mouse-listener";
+import { addGui } from "../utils/utils";
 
 export class FirstScene {
   private scene = new THREE.Scene();
@@ -36,9 +37,11 @@ export class FirstScene {
     return this.camera;
   }
 
-  update(dt: number) {
-    this.aimGun();
+  update(dt: number, elapsed: number) {
+    // Update
+    this.gunIdle(elapsed);
 
+    // Draw
     this.renderer.render(this.scene, this.camera);
 
     // Post update
@@ -64,7 +67,7 @@ export class FirstScene {
   }
 
   private setupObjects() {
-    const { modelLoader, textureLoader } = this.gameLoader;
+    const { modelLoader } = this.gameLoader;
 
     const range = modelLoader.get("shooting-range");
     this.scene.add(range);
@@ -72,29 +75,27 @@ export class FirstScene {
 
   private setupGun() {
     const { modelLoader, textureLoader } = this.gameLoader;
+
     const pistol = modelLoader.get("pistol");
     const pistolTex = textureLoader.get("weapon-26");
     if (pistolTex) {
       TextureLoader.applyModelTexture(pistol, pistolTex);
     }
 
-    this.scene.add(pistol);
+    // Turn it around since we're looking into scene along negative z
+    pistol.rotateY(Math.PI);
+
+    // Offset relative to camera
+    pistol.position.set(0.45, -0.2, -0.5);
+
+    this.camera.add(pistol);
+    this.scene.add(this.camera);
 
     return pistol;
   }
 
-  private aimGun() {
-    const position = this.camera.position.clone();
-    const lookDir = this.controls.getDirection(new THREE.Vector3());
-    position.add(lookDir.multiplyScalar(0.5));
-    this.gun.position.copy(position);
-
-    this.gun.rotation.set(
-      this.camera.rotation.x,
-      this.camera.rotation.y,
-      this.camera.rotation.z
-    );
-
-    this.gun.rotateY(Math.PI);
+  private gunIdle(elapsedTime: number) {
+    // Bob gun up and down
+    this.gun.position.y += Math.sin(elapsedTime * 2) * 0.00005;
   }
 }

@@ -51,7 +51,8 @@ export class GameState {
     requestAnimationFrame(this.update);
 
     const dt = this.clock.getDelta();
+    const elapsed = this.clock.getElapsedTime();
 
-    this.firstScene.update(dt);
+    this.firstScene.update(dt, elapsed);
   };
 }

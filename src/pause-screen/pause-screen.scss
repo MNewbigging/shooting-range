@@ -5,6 +5,8 @@
   left: 0;
   right: 0;
 
+  background-color: rgba(28, 33, 39, 0.7);
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,6 +14,7 @@
 
 .menu-button {
   user-select: none;
+  pointer-events: none;
   width: 200px;
   height: 60px;
   background-color: white;
@@ -23,7 +26,7 @@
   padding: 30px;
   cursor: pointer;
   transition: all;
-  animation: delayClicks 1.2s;
+  animation: delayClicks 2s forwards;
 
   display: flex;
   justify-content: center;

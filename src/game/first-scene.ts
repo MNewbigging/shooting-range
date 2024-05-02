@@ -70,7 +70,7 @@ export class FirstScene {
     return new Gun(this.gameLoader, this.scene, this.camera, {
       name: "pistol",
       firingModeName: "semi-auto",
-      rpm: 60,
+      rpm: 120,
     });
   }
 }

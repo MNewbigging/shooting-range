@@ -49,6 +49,7 @@ export class GameState {
 
     // Handle pointer lock events
     document.addEventListener("pointerlockchange", this.onPointerLockChange);
+    document.addEventListener("pointerlockerror", this.onPointerLockError);
 
     // Start game
     this.update();
@@ -77,6 +78,10 @@ export class GameState {
     if (document.pointerLockElement !== this.renderer.domElement) {
       this.paused = true;
     }
+  };
+
+  private onPointerLockError = () => {
+    this.paused = true;
   };
 
   private update = () => {

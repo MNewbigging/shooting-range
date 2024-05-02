@@ -6,20 +6,17 @@ import { TextureLoader } from "../loaders/texture-loader";
 
 export interface GunProps {
   name: "pistol";
-  firingMode: FiringMode;
+  firingModeName: FiringModeName;
   rpm: number;
 }
 
-export type FiringMode = "semi-auto" | "auto" | "burst";
+export type FiringModeName = "semi-auto" | "auto" | "burst";
 
 export class Gun {
   private raycaster = new THREE.Raycaster();
   private object: THREE.Object3D;
 
   private firingMode: FiringMode;
-  private rpm: number;
-  private timeBetweenShots: number;
-  private shotTimer = 0;
 
   private bulletDecalMaterial: THREE.MeshBasicMaterial;
   private decalHelper = new THREE.Object3D();
@@ -27,34 +24,23 @@ export class Gun {
 
   constructor(
     private readonly gameLoader: GameLoader,
-    private readonly mouseListener: MouseListener,
     private readonly scene: THREE.Scene,
     private readonly camera: THREE.PerspectiveCamera,
-    props: GunProps
+    private readonly props: GunProps
   ) {
-    this.firingMode = props.firingMode;
-    this.rpm = props.rpm;
-
-    // RPM determines how many seconds between shots
-    this.timeBetweenShots = 1 / (this.rpm / 60);
-
+    this.firingMode = this.getFiringMode(props.firingModeName);
     this.object = this.setupGunModel(props.name);
     this.bulletDecalMaterial = this.setupBulletDecalMaterial();
   }
 
+  setFiringMode(mode: FiringModeName) {
+    this.firingMode.disable();
+    this.firingMode = this.getFiringMode(mode);
+  }
+
   update(dt: number, elapsed: number) {
-    // Tick down the shot timer towards 0
-    this.shotTimer -= dt;
-
-    // If holding fire button and shotTimer is finished, we can shoot
-    if (this.mouseListener.lmb && this.shotTimer <= 0) {
-      this.fire();
-
-      // Cannot fire again until timeBetweenShots has passed
-      this.shotTimer = this.timeBetweenShots;
-    } else {
-      this.idle(elapsed);
-    }
+    // Probably shouldn't do this when firing though...
+    //this.idle(elapsed);
   }
 
   private setupGunModel(name: string) {
@@ -91,22 +77,35 @@ export class Gun {
     return material;
   }
 
+  private getFiringMode(name: FiringModeName) {
+    if (name === "auto") {
+      return (this.firingMode = new AutomaticFiringMode(
+        this.props.rpm,
+        this.fire
+      ));
+    }
+
+    return (this.firingMode = new SemiAutoFiringMode(
+      this.props.rpm,
+      this.fire
+    ));
+  }
+
   private idle(elapsed: number) {
     // Bob up and down slightly
     this.object.position.y += Math.sin(elapsed * 2) * 0.00005;
   }
 
-  private fire() {
+  private fire = () => {
     console.log("pew");
 
     // Was something hit?
     const hit = this.getIntersection();
 
     if (hit) {
-      // Draw a decal where we hit
       this.placeHitDecal(hit);
     }
-  }
+  };
 
   private getIntersection(): THREE.Intersection | undefined {
     this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
@@ -143,4 +142,83 @@ export class Gun {
     const decal = new THREE.Mesh(decalGeom, this.bulletDecalMaterial);
     this.scene.add(decal);
   }
+}
+
+// A firing mode doesn't do the firing, just determines WHEN to fire
+abstract class FiringMode {
+  protected shotTimer = 0;
+  private timeBetweenShots: number;
+
+  constructor(rpm: number, private readonly fire: () => void) {
+    this.timeBetweenShots = 1 / (rpm / 60);
+  }
+
+  abstract disable(): void;
+
+  update(dt: number) {
+    this.shotTimer -= dt;
+  }
+
+  onFire() {
+    this.shotTimer = this.timeBetweenShots;
+    this.fire();
+  }
+}
+
+class AutomaticFiringMode extends FiringMode {
+  lmb = false;
+
+  constructor(rpm: number, fire: () => void) {
+    super(rpm, fire);
+
+    window.addEventListener("mousedown", this.onMouseDown);
+    window.addEventListener("mouseup", this.onMouseUp);
+  }
+
+  override disable() {
+    window.removeEventListener("mousedown", this.onMouseDown);
+    window.removeEventListener("mouseup", this.onMouseUp);
+  }
+
+  update() {
+    if (this.canFire()) {
+      this.onFire();
+    }
+  }
+
+  private canFire() {
+    return this.lmb && this.shotTimer <= 0;
+  }
+
+  private onMouseDown = (e: MouseEvent) => {
+    this.lmb = e.button === 0;
+  };
+
+  private onMouseUp = (e: MouseEvent) => {
+    this.lmb = !(e.button === 0);
+  };
+}
+
+class SemiAutoFiringMode extends FiringMode {
+  constructor(rpm: number, fire: () => void) {
+    super(rpm, fire);
+
+    window.addEventListener("click", this.onClick);
+  }
+
+  override disable(): void {
+    window.removeEventListener("click", this.onClick);
+  }
+
+  private canFire() {
+    return this.shotTimer <= 0;
+  }
+
+  private onClick = (e: MouseEvent) => {
+    console.log("onClick");
+
+    if (e.button === 0 && this.canFire()) {
+      this.onFire();
+    }
+  };
 }

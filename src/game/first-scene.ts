@@ -1,10 +1,7 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
-import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry";
 import { GameLoader } from "../loaders/game-loader";
-import { TextureLoader } from "../loaders/texture-loader";
 import { MouseListener } from "../listeners/mouse-listener";
-import { addGui } from "../utils/utils";
 import { Gun } from "./gun";
 
 export class FirstScene {
@@ -70,31 +67,10 @@ export class FirstScene {
   }
 
   private setupGun() {
-    return new Gun(
-      this.gameLoader,
-      this.mouseListener,
-      this.scene,
-      this.camera,
-      {
-        name: "pistol",
-        firingMode: "semi-auto",
-        rpm: 60,
-      }
-    );
-  }
-
-  private setupBulletDecal() {
-    const decal = this.gameLoader.textureLoader.get("bullet-hole");
-
-    const material = new THREE.MeshPhongMaterial({
-      map: decal,
-      transparent: true,
-      depthTest: true,
-      depthWrite: false,
-      polygonOffset: true,
-      polygonOffsetFactor: -4,
+    return new Gun(this.gameLoader, this.scene, this.camera, {
+      name: "pistol",
+      firingModeName: "semi-auto",
+      rpm: 480,
     });
-
-    return material;
   }
 }

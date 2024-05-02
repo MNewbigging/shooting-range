@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
+import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry";
 import { GameLoader } from "../loaders/game-loader";
 import { TextureLoader } from "../loaders/texture-loader";
 import { MouseListener } from "../listeners/mouse-listener";
@@ -14,6 +15,9 @@ export class FirstScene {
 
   private gun: THREE.Object3D;
   private canFire = true;
+  private bulletHoleMat: THREE.MeshPhongMaterial;
+  private decalHelper = new THREE.Object3D();
+  private decalSize = new THREE.Vector3(0.1, 0.1, 0.1);
 
   constructor(
     private renderer: THREE.WebGLRenderer,
@@ -29,18 +33,11 @@ export class FirstScene {
     this.setupLights();
     this.setupObjects();
     this.gun = this.setupGun();
+    this.bulletHoleMat = this.setupBulletDecal();
 
     this.scene.background = new THREE.Color("#1680AF");
 
-    /**
-     * How does firing a gun work...
-     *
-     * Different depending on if its auto or semi-auto
-     *
-     * Auto: holding mouse will continue to fire
-     * Semi-auto: must release mouse to fire again
-     */
-
+    // I could also just use the 'click' event instead of these two?
     document.addEventListener("mousedown", this.onMouseDown);
     document.addEventListener("mouseup", this.onMouseUp);
   }
@@ -106,6 +103,21 @@ export class FirstScene {
     return pistol;
   }
 
+  private setupBulletDecal() {
+    const decal = this.gameLoader.textureLoader.get("bullet-hole");
+
+    const material = new THREE.MeshPhongMaterial({
+      map: decal,
+      transparent: true,
+      depthTest: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+    });
+
+    return material;
+  }
+
   private gunIdle(elapsedTime: number) {
     // Bob gun up and down
     this.gun.position.y += Math.sin(elapsedTime * 2) * 0.00005;
@@ -114,7 +126,7 @@ export class FirstScene {
   private onMouseDown = (e: MouseEvent) => {
     if (this.canFire) {
       // Fire
-      console.log("pew");
+      this.fireGun();
       this.canFire = false;
     }
   };
@@ -125,8 +137,42 @@ export class FirstScene {
   };
 
   private fireGun() {
+    console.log("pew");
+
     // Animate trigger pull
     // Spawn bullet
     // Animate recoil
+
+    // Raycast into scene
+    this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
+    const intersections = this.raycaster.intersectObjects(this.scene.children);
+    if (!intersections.length) {
+      return;
+    }
+
+    const hit = intersections[0];
+    if (!hit.face) {
+      return;
+    }
+
+    const mesh = hit.object as THREE.Mesh;
+
+    const normal = hit.face.normal.clone();
+    normal.transformDirection(mesh.matrixWorld);
+    normal.add(hit.point);
+
+    this.decalHelper.position.copy(hit.point);
+    this.decalHelper.lookAt(normal);
+
+    const position = hit.point;
+
+    const decalGeom = new DecalGeometry(
+      mesh,
+      position,
+      this.decalHelper.rotation,
+      this.decalSize
+    );
+    const decal = new THREE.Mesh(decalGeom, this.bulletHoleMat);
+    this.scene.add(decal);
   }
 }

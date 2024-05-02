@@ -41,6 +41,10 @@ export class TextureLoader {
     const wep26Url = new URL("/textures/Wep_Skin_26.png", import.meta.url).href;
     nameUrlMap.set("weapon-26", wep26Url);
 
+    const bulletHoleUrl = new URL("/textures/bullet_hole.png", import.meta.url)
+      .href;
+    nameUrlMap.set("bullet-hole", bulletHoleUrl);
+
     return nameUrlMap;
   }
 

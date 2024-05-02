@@ -39,6 +39,7 @@ export class Gun {
   }
 
   update(dt: number, elapsed: number) {
+    this.firingMode.update(dt);
     // Probably shouldn't do this when firing though...
     //this.idle(elapsed);
   }
@@ -200,25 +201,33 @@ class AutomaticFiringMode extends FiringMode {
 }
 
 class SemiAutoFiringMode extends FiringMode {
+  lmbWasReleased = true;
+
   constructor(rpm: number, fire: () => void) {
     super(rpm, fire);
 
-    window.addEventListener("click", this.onClick);
+    window.addEventListener("mousedown", this.onMouseDown);
+    window.addEventListener("mouseup", this.onMouseUp);
   }
 
-  override disable(): void {
-    window.removeEventListener("click", this.onClick);
+  override disable() {
+    window.removeEventListener("mousedown", this.onMouseDown);
+    window.removeEventListener("mouseup", this.onMouseUp);
   }
 
   private canFire() {
-    return this.shotTimer <= 0;
+    return this.lmbWasReleased && this.shotTimer <= 0;
   }
 
-  private onClick = (e: MouseEvent) => {
-    console.log("onClick");
-
+  private onMouseDown = (e: MouseEvent) => {
     if (e.button === 0 && this.canFire()) {
       this.onFire();
+    }
+  };
+
+  private onMouseUp = (e: MouseEvent) => {
+    if (e.button === 0) {
+      this.lmbWasReleased = true;
     }
   };
 }

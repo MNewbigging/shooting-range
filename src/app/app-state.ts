@@ -18,6 +18,6 @@ export class AppState {
   };
 
   private async loadGame() {
-    this.gameLoader.load(() => console.log("ready to start"));
+    this.gameLoader.load();
   }
 }

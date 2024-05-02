@@ -63,7 +63,6 @@ export class GameState {
   private onPointerLockChange = () => {
     // If exiting
     if (document.pointerLockElement !== this.renderer.domElement) {
-      console.log("left pointer lock");
       this.paused = true;
     }
   };

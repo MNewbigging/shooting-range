@@ -13,16 +13,12 @@ export class GameLoader {
   readonly modelLoader = new ModelLoader();
   readonly animLoader = new AnimLoader();
 
-  private onLoad?: () => void;
-
   constructor() {
     makeAutoObservable(this);
     THREE.Cache.enabled = true;
   }
 
-  @action load(onLoad: () => void) {
-    this.onLoad = onLoad;
-
+  @action load() {
     this.loading = true;
 
     this.textureLoader.load(this.onLoaderFinish);
@@ -34,7 +30,6 @@ export class GameLoader {
     // Simply check if all loaders have finished now
     if (this.modelLoader.doneLoading && this.textureLoader.doneLoading) {
       this.loading = false;
-      this.onLoad?.();
     }
   };
 }

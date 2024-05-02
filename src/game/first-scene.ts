@@ -9,7 +9,6 @@ export class FirstScene {
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera();
   private raycaster = new THREE.Raycaster();
-  private mouseListener: MouseListener;
 
   private controls: PointerLockControls;
 
@@ -17,13 +16,13 @@ export class FirstScene {
 
   constructor(
     private renderer: THREE.WebGLRenderer,
-    private gameLoader: GameLoader
+    private gameLoader: GameLoader,
+    private mouseListener: MouseListener
   ) {
     this.controls = new PointerLockControls(
       this.camera,
       this.renderer.domElement
     );
-    this.mouseListener = new MouseListener(this.renderer.domElement);
 
     this.setupCamera();
     this.setupLights();

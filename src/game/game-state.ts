@@ -3,6 +3,8 @@ import * as THREE from "three";
 import { GameLoader } from "../loaders/game-loader";
 import { FirstScene } from "./first-scene";
 import { makeAutoObservable, observable } from "mobx";
+import { MouseListener } from "../listeners/mouse-listener";
+import { KeyboardListener } from "../listeners/keyboard-listener";
 
 export class GameState {
   @observable paused = false;
@@ -10,6 +12,8 @@ export class GameState {
   private renderer: THREE.WebGLRenderer;
   private clock = new THREE.Clock();
 
+  private mouseListener: MouseListener;
+  private keyboardListener: KeyboardListener;
   private firstScene: FirstScene;
 
   constructor(private gameLoader: GameLoader) {
@@ -29,7 +33,15 @@ export class GameState {
     canvasRoot?.appendChild(canvas);
     canvas.requestPointerLock();
 
-    this.firstScene = new FirstScene(this.renderer, this.gameLoader);
+    // Listeners
+    this.mouseListener = new MouseListener(canvas);
+    this.keyboardListener = new KeyboardListener();
+
+    this.firstScene = new FirstScene(
+      this.renderer,
+      this.gameLoader,
+      this.mouseListener
+    );
 
     // Handle any canvas resize events
     window.addEventListener("resize", this.onCanvasResize);

@@ -13,6 +13,7 @@ export class FirstScene {
   private controls: PointerLockControls;
 
   private gun: THREE.Object3D;
+  private canFire = true;
 
   constructor(
     private renderer: THREE.WebGLRenderer,
@@ -30,6 +31,18 @@ export class FirstScene {
     this.gun = this.setupGun();
 
     this.scene.background = new THREE.Color("#1680AF");
+
+    /**
+     * How does firing a gun work...
+     *
+     * Different depending on if its auto or semi-auto
+     *
+     * Auto: holding mouse will continue to fire
+     * Semi-auto: must release mouse to fire again
+     */
+
+    document.addEventListener("mousedown", this.onMouseDown);
+    document.addEventListener("mouseup", this.onMouseUp);
   }
 
   getCamera() {
@@ -96,5 +109,24 @@ export class FirstScene {
   private gunIdle(elapsedTime: number) {
     // Bob gun up and down
     this.gun.position.y += Math.sin(elapsedTime * 2) * 0.00005;
+  }
+
+  private onMouseDown = (e: MouseEvent) => {
+    if (this.canFire) {
+      // Fire
+      console.log("pew");
+      this.canFire = false;
+    }
+  };
+
+  private onMouseUp = (e: MouseEvent) => {
+    // Assumes you can fire as fast as you can click
+    this.canFire = true;
+  };
+
+  private fireGun() {
+    // Animate trigger pull
+    // Spawn bullet
+    // Animate recoil
   }
 }

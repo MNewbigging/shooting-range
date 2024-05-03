@@ -13,12 +13,6 @@ export interface GunProps {
 
 export type FiringModeName = "semi-auto" | "auto" | "burst";
 
-type GunAnimationName = "idle" | "firing";
-interface GunAnimation {
-  name: GunAnimationName;
-  anim: TWEEN.Tween<any>;
-}
-
 export class Gun {
   private raycaster = new THREE.Raycaster();
   private object: THREE.Object3D;
@@ -29,8 +23,7 @@ export class Gun {
   private decalHelper = new THREE.Object3D();
   private decalSize = new THREE.Vector3(0.1, 0.1, 0.1);
 
-  private currentAnimation: GunAnimation;
-  private idleAnim: GunAnimation;
+  private idleAnim: TWEEN.Tween<any>;
 
   constructor(
     private readonly gameLoader: GameLoader,
@@ -43,11 +36,9 @@ export class Gun {
     this.object = this.setupGunModel(props.name);
     this.bulletDecalMaterial = this.setupBulletDecalMaterial();
 
-    // Setup animations
-    console.log("gun y pos started at", this.object.position.y);
+    // Enter idle animation by default
     this.idleAnim = this.setupIdleAnim();
-    this.currentAnimation = this.idleAnim;
-    this.currentAnimation.anim.start();
+    this.idleAnim.start();
   }
 
   setFiringMode(mode: FiringModeName) {
@@ -95,23 +86,22 @@ export class Gun {
     return material;
   }
 
-  private setupIdleAnim(): GunAnimation {
+  private setupIdleAnim() {
     const start = this.object.position.y;
     const target = this.object.position.y + 0.01;
     const anim = new TWEEN.Tween(this.object.position).to({ y: target }, 1500);
-    const reverse = new TWEEN.Tween(this.object.position)
-      .to({ y: start }, 1500)
-      .onComplete(() => console.log("anim end pos", this.object.position.y));
+    const reverse = new TWEEN.Tween(this.object.position).to(
+      { y: start },
+      1500
+    );
+
     anim.chain(reverse);
     reverse.chain(anim);
 
-    return {
-      name: "idle",
-      anim,
-    };
+    return anim;
   }
 
-  private getRecoilAnim(): GunAnimation {
+  private getRecoilAnim() {
     const startPos = this.object.position.clone();
     const startRot = this.object.rotation.x;
 
@@ -121,6 +111,7 @@ export class Gun {
       .add(recoilOffset);
     const targetRot = this.object.rotation.x + 0.1;
 
+    // Seconds between shots to milliseconds, halved because it needs to return to start pos
     const maxTime = this.firingMode.timeBetweenShots * 1000 * 0.5;
     const duration = maxTime * 0.5;
 
@@ -140,10 +131,7 @@ export class Gun {
     );
     anim.chain(reverse);
 
-    return {
-      name: "firing",
-      anim,
-    };
+    return anim;
   }
 
   private getFiringMode(name: FiringModeName) {
@@ -162,18 +150,12 @@ export class Gun {
     ));
   }
 
-  private setAnimation(animation: GunAnimation) {
-    // End the current animation
-    this.currentAnimation.anim.stop();
-
-    // Start the new one
-    this.currentAnimation = animation;
-    this.currentAnimation.anim.start();
-  }
-
   private fire = () => {
-    // Start the recoil animation
-    this.setAnimation(this.getRecoilAnim());
+    // Animate
+    this.idleAnim.pause();
+    const recoilAnim = this.getRecoilAnim();
+    recoilAnim.onComplete(() => this.idleAnim.resume());
+    recoilAnim.start();
 
     // Was something hit?
     const hit = this.getIntersection();

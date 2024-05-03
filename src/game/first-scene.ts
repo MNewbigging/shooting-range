@@ -3,6 +3,7 @@ import { PointerLockControls } from "three/examples/jsm/controls/PointerLockCont
 import { GameLoader } from "../loaders/game-loader";
 import { MouseListener } from "../listeners/mouse-listener";
 import { Gun } from "./gun";
+import { addGui } from "../utils/utils";
 
 export class FirstScene {
   private scene = new THREE.Scene();
@@ -63,7 +64,13 @@ export class FirstScene {
     const { modelLoader } = this.gameLoader;
 
     const range = modelLoader.get("shooting-range");
+    range.position.y = -0.075;
     this.scene.add(range);
+
+    const target = modelLoader.get("target");
+    target.position.z = -4;
+    this.scene.add(target);
+    console.log("target", target);
   }
 
   private setupGun() {
@@ -72,6 +79,7 @@ export class FirstScene {
       this.mouseListener,
       this.scene,
       this.camera,
+      this.onShootSomething,
       {
         name: "pistol",
         firingModeName: "semi-auto",
@@ -79,4 +87,13 @@ export class FirstScene {
       }
     );
   }
+
+  private onShootSomething = (hit: THREE.Intersection) => {
+    // Determine if this was a target
+    if (hit.object.name === "target") {
+      console.log("hit target", hit.object);
+      // Rotate the target back
+      hit.object.rotateX(-Math.PI / 2);
+    }
+  };
 }

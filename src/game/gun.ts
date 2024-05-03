@@ -30,6 +30,7 @@ export class Gun {
     private readonly mouseListener: MouseListener,
     private readonly scene: THREE.Scene,
     private readonly camera: THREE.PerspectiveCamera,
+    private readonly onShootSomething: (hit: THREE.Intersection) => void,
     private readonly props: GunProps
   ) {
     this.firingMode = this.getFiringMode(props.firingModeName);
@@ -162,6 +163,7 @@ export class Gun {
 
     if (hit) {
       this.placeHitDecal(hit);
+      this.onShootSomething(hit);
     }
   };
 
@@ -198,7 +200,15 @@ export class Gun {
       this.decalSize
     );
     const decal = new THREE.Mesh(decalGeom, this.bulletDecalMaterial);
-    this.scene.add(decal);
+
+    // If the object hit is not static, add decal as a child
+    if (hit.object.name === "target") {
+      hit.object.worldToLocal(decal.position);
+      decal.quaternion.multiply(hit.object.quaternion.clone().invert());
+      hit.object.add(decal);
+    } else {
+      this.scene.add(decal);
+    }
   }
 }
 

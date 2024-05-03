@@ -41,6 +41,7 @@ export class ModelLoader {
   private loadModels = () => {
     const gltfLoader = new GLTFLoader(this.loadingManager);
     this.loadScene(gltfLoader);
+    this.loadTarget(gltfLoader);
 
     const fbxLoader = new FBXLoader(this.loadingManager);
     this.loadPistol(fbxLoader);
@@ -50,6 +51,15 @@ export class ModelLoader {
     const sceneUrl = new URL("/models/shootingRange.glb", import.meta.url).href;
     loader.load(sceneUrl, (gltf) => {
       this.models.set("shooting-range", gltf.scene);
+    });
+  }
+
+  private loadTarget(loader: GLTFLoader) {
+    const targetUrl = new URL("/models/target.glb", import.meta.url).href;
+    loader.load(targetUrl, (gltf) => {
+      const target = gltf.scene.children[0];
+      // target.name = "target";
+      this.models.set("target", target);
     });
   }
 

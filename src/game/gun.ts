@@ -202,7 +202,7 @@ export class Gun {
     const decal = new THREE.Mesh(decalGeom, this.bulletDecalMaterial);
 
     // If the object hit is not static, add decal as a child
-    if (hit.object.name.includes("target")) {
+    if (hit.object.name.includes("body")) {
       hit.object.worldToLocal(decal.position);
       decal.quaternion.multiply(hit.object.quaternion.clone().invert());
       hit.object.add(decal);

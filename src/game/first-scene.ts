@@ -44,6 +44,7 @@ export class FirstScene {
   private gun: Gun;
   private targets: Target[] = [];
   private sliders: SliderTarget[] = [];
+  private targetBodyMap = new Map<string, Target>();
 
   constructor(
     private renderer: THREE.WebGLRenderer,
@@ -110,6 +111,12 @@ export class FirstScene {
       // Create a target object
       const target: Target = { object: child, hit: false };
 
+      // Always add to the body map
+      const body = getChildIncludesName(child, "body");
+      if (body) {
+        this.targetBodyMap.set(body.name, target);
+      }
+
       // Is this a slider target?
       if (child.name.includes("slider")) {
         // Get the start and end positions
@@ -171,11 +178,36 @@ export class FirstScene {
     }
   }
 
-  private onShootSomething = (hit: THREE.Intersection) => {
-    // Determine if this was a target
-    if (hit.object.name.includes("target")) {
-      // Rotate the target back
-      hit.object.rotateX(-Math.PI / 2);
+  private onShootSomething = (intersection: THREE.Intersection) => {
+    // // Determine if this was a target body
+    // if (hit.object.name.includes("body")) {
+    //   // If this target isn't already in the hit position
+
+    //   // Rotate the target back
+    //   hit.object.rotateX(-Math.PI / 2);
+    // }
+
+    const target = this.targetBodyMap.get(intersection.object.name);
+    if (!target) {
+      return;
+    }
+
+    console.log("hit", target.object.name);
+
+    if (!target.hit) {
+      target.hit = true;
+
+      const body = target.object.getObjectByName(intersection.object.name);
+      if (!body) {
+        return;
+      }
+      // flip backwards
+      //this.v.copy(new THREE.Vector3().crossVectors(vectorUp, cameraLookVector).normalize().multiplyScalar(coefficient));
+      const forwards = target.object.getWorldDirection(new THREE.Vector3());
+      const sidewards = new THREE.Vector3()
+        .crossVectors(this.camera.up, forwards)
+        .normalize();
+      body.setRotationFromAxisAngle(sidewards, -Math.PI / 2);
     }
   };
 }

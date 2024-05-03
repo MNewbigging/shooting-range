@@ -75,7 +75,7 @@ export class FirstScene {
       {
         name: "pistol",
         firingModeName: "semi-auto",
-        rpm: 420,
+        rpm: 120,
       }
     );
   }

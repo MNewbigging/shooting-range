@@ -1,7 +1,8 @@
 import * as THREE from "three";
+import * as TWEEN from "@tweenjs/tween.js";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry";
 import { GameLoader } from "../loaders/game-loader";
-import { MouseButton, MouseListener } from "../listeners/mouse-listener";
+import { MouseListener } from "../listeners/mouse-listener";
 import { TextureLoader } from "../loaders/texture-loader";
 
 export interface GunProps {
@@ -11,6 +12,12 @@ export interface GunProps {
 }
 
 export type FiringModeName = "semi-auto" | "auto" | "burst";
+
+type GunAnimationName = "idle" | "firing";
+interface GunAnimation {
+  name: GunAnimationName;
+  anim: TWEEN.Tween<any>;
+}
 
 export class Gun {
   private raycaster = new THREE.Raycaster();
@@ -22,6 +29,9 @@ export class Gun {
   private decalHelper = new THREE.Object3D();
   private decalSize = new THREE.Vector3(0.1, 0.1, 0.1);
 
+  private currentAnimation: GunAnimation;
+  private idleAnim: GunAnimation;
+
   constructor(
     private readonly gameLoader: GameLoader,
     private readonly mouseListener: MouseListener,
@@ -32,6 +42,12 @@ export class Gun {
     this.firingMode = this.getFiringMode(props.firingModeName);
     this.object = this.setupGunModel(props.name);
     this.bulletDecalMaterial = this.setupBulletDecalMaterial();
+
+    // Setup animations
+    console.log("gun y pos started at", this.object.position.y);
+    this.idleAnim = this.setupIdleAnim();
+    this.currentAnimation = this.idleAnim;
+    this.currentAnimation.anim.start();
   }
 
   setFiringMode(mode: FiringModeName) {
@@ -42,8 +58,7 @@ export class Gun {
   update(dt: number, elapsed: number) {
     this.firingMode.update(dt);
 
-    // Probably shouldn't do this when firing though...
-    //this.idle(elapsed);
+    TWEEN.update();
   }
 
   private setupGunModel(name: string) {
@@ -54,10 +69,10 @@ export class Gun {
     }
 
     // Turn it around since we're looking into scene along negative z
-    mesh.rotateY(Math.PI);
+    mesh.rotation.y += Math.PI;
 
     // Offset relative to camera
-    mesh.position.set(0.45, -0.2, -0.5);
+    mesh.position.set(0.15, -0.2, -0.5);
 
     this.camera.add(mesh);
     this.scene.add(this.camera);
@@ -80,6 +95,57 @@ export class Gun {
     return material;
   }
 
+  private setupIdleAnim(): GunAnimation {
+    const start = this.object.position.y;
+    const target = this.object.position.y + 0.01;
+    const anim = new TWEEN.Tween(this.object.position).to({ y: target }, 1500);
+    const reverse = new TWEEN.Tween(this.object.position)
+      .to({ y: start }, 1500)
+      .onComplete(() => console.log("anim end pos", this.object.position.y));
+    anim.chain(reverse);
+    reverse.chain(anim);
+
+    return {
+      name: "idle",
+      anim,
+    };
+  }
+
+  private getRecoilAnim(): GunAnimation {
+    const startPos = this.object.position.clone();
+    const startRot = this.object.rotation.x;
+
+    const recoilOffset = new THREE.Vector3(0, 0.02, 0.1);
+    const targetPos = new THREE.Vector3()
+      .copy(this.object.position)
+      .add(recoilOffset);
+    const targetRot = this.object.rotation.x + 0.1;
+
+    const maxTime = this.firingMode.timeBetweenShots * 1000 * 0.5;
+    const duration = maxTime * 0.5;
+
+    const anim = new TWEEN.Tween(this.object).to(
+      {
+        position: { y: targetPos.y, z: targetPos.z },
+        rotation: { x: targetRot },
+      },
+      duration
+    );
+    const reverse = new TWEEN.Tween(this.object).to(
+      {
+        position: { y: startPos.y, z: startPos.z },
+        rotation: { x: startRot },
+      },
+      duration
+    );
+    anim.chain(reverse);
+
+    return {
+      name: "firing",
+      anim,
+    };
+  }
+
   private getFiringMode(name: FiringModeName) {
     if (name === "auto") {
       return (this.firingMode = new AutomaticFiringMode(
@@ -96,13 +162,18 @@ export class Gun {
     ));
   }
 
-  private idle(elapsed: number) {
-    // Bob up and down slightly
-    this.object.position.y += Math.sin(elapsed * 2) * 0.00005;
+  private setAnimation(animation: GunAnimation) {
+    // End the current animation
+    this.currentAnimation.anim.stop();
+
+    // Start the new one
+    this.currentAnimation = animation;
+    this.currentAnimation.anim.start();
   }
 
   private fire = () => {
-    console.log("pew");
+    // Start the recoil animation
+    this.setAnimation(this.getRecoilAnim());
 
     // Was something hit?
     const hit = this.getIntersection();
@@ -151,8 +222,8 @@ export class Gun {
 
 // A firing mode doesn't do the firing, just determines WHEN to fire
 abstract class FiringMode {
+  readonly timeBetweenShots: number;
   protected shotTimer = 0;
-  private timeBetweenShots: number;
 
   constructor(rpm: number, private readonly fire: () => void) {
     this.timeBetweenShots = 1 / (rpm / 60);

@@ -156,7 +156,7 @@ export class FirstScene {
       {
         name: "pistol",
         firingModeName: "semi-auto",
-        rpm: 120,
+        rpm: 320,
       }
     );
   }
@@ -192,8 +192,6 @@ export class FirstScene {
       return;
     }
 
-    console.log("hit", target.object.name);
-
     if (!target.hit) {
       target.hit = true;
 
@@ -201,13 +199,17 @@ export class FirstScene {
       if (!body) {
         return;
       }
+
+      console.log("flip");
       // flip backwards
-      //this.v.copy(new THREE.Vector3().crossVectors(vectorUp, cameraLookVector).normalize().multiplyScalar(coefficient));
-      const forwards = target.object.getWorldDirection(new THREE.Vector3());
-      const sidewards = new THREE.Vector3()
-        .crossVectors(this.camera.up, forwards)
-        .normalize();
-      body.setRotationFromAxisAngle(sidewards, -Math.PI / 2);
+      // const forwards = target.object.getWorldDirection(new THREE.Vector3());
+      // const sidewards = new THREE.Vector3()
+      //   .crossVectors(new THREE.Vector3(0, 1, 0), forwards)
+      //   .normalize();
+      // body.setRotationFromAxisAngle(sidewards, -Math.PI / 2);
+
+      body.rotateX(-Math.PI / 2);
+      // this works but sends copies into space?!
     }
   };
 }

@@ -3,7 +3,38 @@ import { PointerLockControls } from "three/examples/jsm/controls/PointerLockCont
 import { GameLoader } from "../loaders/game-loader";
 import { MouseListener } from "../listeners/mouse-listener";
 import { Gun } from "./gun";
-import { addGui } from "../utils/utils";
+import { addGui, getChildIncludesName, randomRange } from "../utils/utils";
+
+/**
+ * Target logic:
+ *
+ * 2 modes - default and timed
+ *
+ * Timed:
+ * - All targets become active immediately
+ * - player must shoot each target once
+ * - once all targets are shot, mode ends and time taken is displayed
+ *
+ * Default:
+ * - Targets become active at random
+ * - Targets remain active until shot
+ *
+ * When not in timed mode, enter default mode.
+ *
+ * Would be good to place the targets in blender, but I need to control in code...
+ * How do I do the sliders? I can grab them and move them, but I need to know end points...
+ */
+interface Target {
+  object: THREE.Object3D;
+  hit: boolean;
+}
+
+interface SliderTarget extends Target {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  moveTo: THREE.Vector3;
+  speed: number;
+}
 
 export class FirstScene {
   private scene = new THREE.Scene();
@@ -11,6 +42,8 @@ export class FirstScene {
   private controls: PointerLockControls;
 
   private gun: Gun;
+  private targets: Target[] = [];
+  private sliders: SliderTarget[] = [];
 
   constructor(
     private renderer: THREE.WebGLRenderer,
@@ -38,6 +71,9 @@ export class FirstScene {
     // Update
     this.gun.update(dt, elapsed);
 
+    // Sliders
+    this.sliders.forEach((slider) => this.moveSlider(slider, dt));
+
     // Draw
     this.renderer.render(this.scene, this.camera);
   }
@@ -64,13 +100,43 @@ export class FirstScene {
     const { modelLoader } = this.gameLoader;
 
     const range = modelLoader.get("shooting-range");
-    range.position.y = -0.075;
     this.scene.add(range);
 
-    const target = modelLoader.get("target");
-    target.position.z = -4;
-    this.scene.add(target);
-    console.log("target", target);
+    range.children.forEach((child) => {
+      if (!child.name.includes("target")) {
+        return;
+      }
+
+      // Create a target object
+      const target: Target = { object: child, hit: false };
+
+      // Is this a slider target?
+      if (child.name.includes("slider")) {
+        // Get the start and end positions
+        const start = getChildIncludesName(child, "start")?.getWorldPosition(
+          new THREE.Vector3()
+        );
+        const end = getChildIncludesName(child, "end")?.getWorldPosition(
+          new THREE.Vector3()
+        );
+        if (start && end) {
+          // Create a slider object
+          this.sliders.push({
+            ...target,
+            start,
+            end,
+            moveTo: end,
+            speed: randomRange(0.5, 2),
+          });
+        }
+      } else {
+        // Create a target object
+        this.targets.push(target);
+      }
+    });
+
+    console.log("targets", this.targets);
+    console.log("sliders", this.sliders);
   }
 
   private setupGun() {
@@ -88,10 +154,26 @@ export class FirstScene {
     );
   }
 
+  private moveSlider(slider: SliderTarget, dt: number) {
+    // Move towards target
+    const direction = slider.moveTo
+      .clone()
+      .sub(slider.object.position)
+      .normalize();
+    slider.object.position.add(direction.multiplyScalar(dt * slider.speed));
+
+    // If at target, reverse
+    const distance = slider.object.position.distanceTo(slider.moveTo);
+    if (distance <= 0.05) {
+      slider.moveTo = slider.moveTo.equals(slider.start)
+        ? slider.end
+        : slider.start;
+    }
+  }
+
   private onShootSomething = (hit: THREE.Intersection) => {
     // Determine if this was a target
-    if (hit.object.name === "target") {
-      console.log("hit target", hit.object);
+    if (hit.object.name.includes("target")) {
       // Rotate the target back
       hit.object.rotateX(-Math.PI / 2);
     }

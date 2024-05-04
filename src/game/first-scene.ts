@@ -45,6 +45,7 @@ export class FirstScene {
   private targets: Target[] = [];
   private sliders: SliderTarget[] = [];
   private targetBodyMap = new Map<string, Target>();
+  private targetFlipCd = 0;
 
   constructor(
     private renderer: THREE.WebGLRenderer,
@@ -74,6 +75,9 @@ export class FirstScene {
 
     // Sliders
     this.sliders.forEach((slider) => this.moveSlider(slider, dt));
+
+    // Flip targets
+    this.flipTargets(dt);
 
     // Draw
     this.renderer.render(this.scene, this.camera);
@@ -110,8 +114,9 @@ export class FirstScene {
 
       // Create a target object
       const target: Target = { object: child, hit: false };
+      this.targets.push(target);
 
-      // Always add to the body map
+      // Always add to the body map and targets array
       const body = getChildIncludesName(child, "body");
       if (body) {
         this.targetBodyMap.set(body.name, target);
@@ -136,14 +141,8 @@ export class FirstScene {
             speed: randomRange(0.5, 2),
           });
         }
-      } else {
-        // Create a target object
-        this.targets.push(target);
       }
     });
-
-    console.log("targets", this.targets);
-    console.log("sliders", this.sliders);
   }
 
   private setupGun() {
@@ -200,15 +199,37 @@ export class FirstScene {
         return;
       }
 
-      // flip backwards
-      // const forwards = target.object.getWorldDirection(new THREE.Vector3());
-      // const sidewards = new THREE.Vector3()
-      //   .crossVectors(new THREE.Vector3(0, 1, 0), forwards)
-      //   .normalize();
-      // body.setRotationFromAxisAngle(sidewards, -Math.PI / 2);
-
-      //body.rotateX(-Math.PI / 2);
-      // this works but sends copies into space?!
+      // Flip backwards - target bodies are children so this local rotation just works!
+      body.rotateX(-Math.PI / 2);
     }
   };
+
+  private flipTargets(dt: number) {
+    // Count down random flip timer
+    this.targetFlipCd -= dt;
+
+    if (this.targetFlipCd > 0) {
+      return;
+    }
+
+    // Time to flip - pick a random target to flip back up
+    const toFlip = this.targets.filter((t) => t.hit);
+    if (!toFlip.length) {
+      return;
+    }
+
+    const rnd = Math.floor(Math.random() * toFlip.length);
+    const target = toFlip[rnd];
+
+    // No longer hit
+    target.hit = false;
+
+    // Rotate the body child back up
+    const body = getChildIncludesName(target.object, "body");
+    body?.rotateX(Math.PI / 2);
+
+    // Reset timer - faster when more are flipped
+    const time = this.targets.length - toFlip.length;
+    this.targetFlipCd = Math.max(1, time);
+  }
 }

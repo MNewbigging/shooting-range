@@ -162,7 +162,7 @@ export class Gun {
     const hit = this.getIntersection();
 
     if (hit) {
-      this.placeHitDecal(hit);
+      this.placeStaticDecal(hit);
       this.onShootSomething(hit);
     }
   };
@@ -205,12 +205,56 @@ export class Gun {
     );
     const decal = new THREE.Mesh(decalGeom, this.bulletDecalMaterial);
 
-    this.scene.add(decal);
+    // The decal thinks it's at position 0, because the position is baked into the geometry.
+    // This means it's always getting the intersection.point added behind the scenes
+    // So when positioning, always subtract by intersection.point
 
-    // Transform into local space in order to make a child of object
-    //mesh.worldToLocal(decal.position);
-    //decal.quaternion.copy(mesh.quaternion.clone().invert());
-    //mesh.add(decal);
+    // Get intersection point as local to mesh
+    const localIntersectionPoint = mesh.worldToLocal(
+      intersection.point.clone()
+    );
+
+    // Add as child
+    mesh.add(decal);
+
+    // Move to local int point
+    decal.position.copy(localIntersectionPoint);
+
+    // Adjust by the baked-in geometry positions
+    decal.position.sub(intersection.point);
+  }
+
+  private placeStaticDecal(intersection: THREE.Intersection) {
+    // For now, can only place on static objects
+    if (intersection.object.name.includes("body")) {
+      return;
+    }
+
+    if (!intersection.face) {
+      return;
+    }
+
+    const mesh = intersection.object as THREE.Mesh;
+
+    // Transform local normal to world normal
+    const normal = intersection.face.normal.clone();
+    normal.transformDirection(mesh.matrixWorld);
+    normal.add(intersection.point);
+
+    // Move helper using world values
+    this.decalHelper.position.copy(intersection.point);
+    this.decalHelper.lookAt(normal);
+
+    // Create decal in world space
+    const decalGeom = new DecalGeometry(
+      mesh,
+      intersection.point,
+      this.decalHelper.rotation,
+      this.decalSize
+    );
+    const decal = new THREE.Mesh(decalGeom, this.bulletDecalMaterial);
+
+    this.scene.add(decal);
   }
 }
 

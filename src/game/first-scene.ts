@@ -200,7 +200,6 @@ export class FirstScene {
         return;
       }
 
-      console.log("flip");
       // flip backwards
       // const forwards = target.object.getWorldDirection(new THREE.Vector3());
       // const sidewards = new THREE.Vector3()
@@ -208,7 +207,7 @@ export class FirstScene {
       //   .normalize();
       // body.setRotationFromAxisAngle(sidewards, -Math.PI / 2);
 
-      body.rotateX(-Math.PI / 2);
+      //body.rotateX(-Math.PI / 2);
       // this works but sends copies into space?!
     }
   };

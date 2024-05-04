@@ -169,7 +169,10 @@ export class Gun {
 
   private getIntersection(): THREE.Intersection | undefined {
     this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
-    const intersections = this.raycaster.intersectObjects(this.scene.children);
+    const intersections = this.raycaster.intersectObjects(
+      this.scene.children,
+      true
+    );
     if (!intersections.length) {
       return undefined;
     }
@@ -177,38 +180,37 @@ export class Gun {
     return intersections[0];
   }
 
-  private placeHitDecal(hit: THREE.Intersection) {
-    if (!hit.face) {
+  private placeHitDecal(intersection: THREE.Intersection) {
+    if (!intersection.face) {
       return;
     }
 
-    const mesh = hit.object as THREE.Mesh;
+    const mesh = intersection.object as THREE.Mesh;
 
-    const normal = hit.face.normal.clone();
+    // Transform local normal to world normal
+    const normal = intersection.face.normal.clone();
     normal.transformDirection(mesh.matrixWorld);
-    normal.add(hit.point);
+    normal.add(intersection.point);
 
-    this.decalHelper.position.copy(hit.point);
+    // Move helper using world values
+    this.decalHelper.position.copy(intersection.point);
     this.decalHelper.lookAt(normal);
 
-    const position = hit.point;
-
+    // Create decal in world space
     const decalGeom = new DecalGeometry(
       mesh,
-      position,
+      intersection.point,
       this.decalHelper.rotation,
       this.decalSize
     );
     const decal = new THREE.Mesh(decalGeom, this.bulletDecalMaterial);
 
-    // If the object hit is not static, add decal as a child
-    if (hit.object.name.includes("body")) {
-      hit.object.worldToLocal(decal.position);
-      decal.quaternion.multiply(hit.object.quaternion.clone().invert());
-      hit.object.add(decal);
-    } else {
-      this.scene.add(decal);
-    }
+    this.scene.add(decal);
+
+    // Transform into local space in order to make a child of object
+    //mesh.worldToLocal(decal.position);
+    //decal.quaternion.copy(mesh.quaternion.clone().invert());
+    //mesh.add(decal);
   }
 }
 

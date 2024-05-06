@@ -5,6 +5,7 @@ import { FirstScene } from "./first-scene";
 import { makeAutoObservable, observable } from "mobx";
 import { MouseListener } from "../listeners/mouse-listener";
 import { KeyboardListener } from "../listeners/keyboard-listener";
+import { EventListener } from "../listeners/event-listener";
 
 export class GameState {
   @observable paused = false;
@@ -14,6 +15,8 @@ export class GameState {
 
   private mouseListener: MouseListener;
   private keyboardListener: KeyboardListener;
+  private events: EventListener;
+
   private firstScene: FirstScene;
 
   constructor(private gameLoader: GameLoader) {
@@ -36,11 +39,14 @@ export class GameState {
     // Listeners
     this.mouseListener = new MouseListener();
     this.keyboardListener = new KeyboardListener();
+    this.events = new EventListener();
 
     this.firstScene = new FirstScene(
       this.renderer,
       this.gameLoader,
-      this.mouseListener
+      this.mouseListener,
+      this.keyboardListener,
+      this.events
     );
 
     // Handle any canvas resize events

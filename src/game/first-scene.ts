@@ -1,10 +1,12 @@
 import * as THREE from "three";
+import * as TWEEN from "@tweenjs/tween.js";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { GameLoader } from "../loaders/game-loader";
 import { MouseListener } from "../listeners/mouse-listener";
 import { Gun } from "./gun";
 import { addGui, getChildIncludesName, randomRange } from "../utils/utils";
-
+import { KeyboardListener } from "../listeners/keyboard-listener";
+import { EventListener } from "../listeners/event-listener";
 /**
  * Target logic:
  *
@@ -27,8 +29,10 @@ import { addGui, getChildIncludesName, randomRange } from "../utils/utils";
 interface Target {
   object: THREE.Object3D;
   hit: boolean;
+  flipCooldown: number;
 }
 
+// Is the separation of types a good thing?
 interface SliderTarget extends Target {
   start: THREE.Vector3;
   end: THREE.Vector3;
@@ -42,15 +46,19 @@ export class FirstScene {
   private controls: PointerLockControls;
 
   private gun: Gun;
+
   private targets: Target[] = [];
   private sliders: SliderTarget[] = [];
+
   private targetBodyMap = new Map<string, Target>();
   private targetFlipCd = 0;
 
   constructor(
     private renderer: THREE.WebGLRenderer,
     private gameLoader: GameLoader,
-    private mouseListener: MouseListener
+    private mouseListener: MouseListener,
+    private keyboardListener: KeyboardListener,
+    private events: EventListener
   ) {
     this.controls = new PointerLockControls(
       this.camera,
@@ -73,11 +81,11 @@ export class FirstScene {
     // Update
     this.gun.update(dt, elapsed);
 
-    // Sliders
+    // Targets
     this.sliders.forEach((slider) => this.moveSlider(slider, dt));
 
     // Flip targets
-    this.flipTargets(dt);
+    //this.flipTargets(dt);
 
     // Draw
     this.renderer.render(this.scene, this.camera);
@@ -113,7 +121,7 @@ export class FirstScene {
       }
 
       // Create a target object
-      const target: Target = { object: child, hit: false };
+      const target: Target = { object: child, hit: false, flipCooldown: 0 };
       this.targets.push(target);
 
       // Always add to the body map and targets array
@@ -178,31 +186,34 @@ export class FirstScene {
   }
 
   private onShootSomething = (intersection: THREE.Intersection) => {
-    // // Determine if this was a target body
-    // if (hit.object.name.includes("body")) {
-    //   // If this target isn't already in the hit position
-
-    //   // Rotate the target back
-    //   hit.object.rotateX(-Math.PI / 2);
-    // }
-
+    // If we shot a target's body, get the target from the body name here
     const target = this.targetBodyMap.get(intersection.object.name);
     if (!target) {
       return;
     }
 
+    // So long as this target wasn't already in the hit position
     if (!target.hit) {
+      // Hit it
       target.hit = true;
 
-      const body = target.object.getObjectByName(intersection.object.name);
-      if (!body) {
-        return;
-      }
-
       // Flip backwards - target bodies are children so this local rotation just works!
-      body.rotateX(-Math.PI / 2);
+      const body = intersection.object;
+      const start = body.rotation.x;
+      new TWEEN.Tween(body.rotation)
+        .to({ x: start - Math.PI / 2 }, 250)
+        .easing(TWEEN.Easing.Quadratic.Out)
+        .start();
+
+      // Flip it upright after a random interval
     }
   };
+
+  // todo - this flips immediately when hitting first target, because timer hasn't been set
+  // could flip based on last hit time
+
+  // check for flipping at random intervals (smaller intervals when more are flipped)
+  // can only flip a target that was hit more than n seconds ago
 
   private flipTargets(dt: number) {
     // Count down random flip timer
@@ -226,10 +237,16 @@ export class FirstScene {
 
     // Rotate the body child back up
     const body = getChildIncludesName(target.object, "body");
-    body?.rotateX(Math.PI / 2);
+    if (body) {
+      const start = body.rotation.x;
+      new TWEEN.Tween(body.rotation)
+        .to({ x: start + Math.PI / 2 }, 250)
+        .easing(TWEEN.Easing.Quadratic.Out)
+        .start();
+    }
 
     // Reset timer - faster when more are flipped
-    const time = this.targets.length - toFlip.length;
+    const time = this.targets.length - toFlip.length - 2;
     this.targetFlipCd = Math.max(1, time);
   }
 }

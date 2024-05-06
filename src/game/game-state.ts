@@ -1,5 +1,5 @@
 import * as THREE from "three";
-
+import * as TWEEN from "@tweenjs/tween.js";
 import { GameLoader } from "../loaders/game-loader";
 import { FirstScene } from "./first-scene";
 import { makeAutoObservable, observable } from "mobx";
@@ -41,6 +41,7 @@ export class GameState {
     this.keyboardListener = new KeyboardListener();
     this.events = new EventListener();
 
+    // Scenes
     this.firstScene = new FirstScene(
       this.renderer,
       this.gameLoader,
@@ -104,6 +105,7 @@ export class GameState {
 
     if (!this.paused) {
       this.firstScene.update(dt, elapsed);
+      TWEEN.update();
     }
   };
 }

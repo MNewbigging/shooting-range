@@ -4,6 +4,7 @@ import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry";
 import { GameLoader } from "../loaders/game-loader";
 import { MouseListener } from "../listeners/mouse-listener";
 import { TextureLoader } from "../loaders/texture-loader";
+import { EventListener } from "../listeners/event-listener";
 
 export interface GunProps {
   name: "pistol";
@@ -30,7 +31,7 @@ export class Gun {
     private readonly mouseListener: MouseListener,
     private readonly scene: THREE.Scene,
     private readonly camera: THREE.PerspectiveCamera,
-    private readonly onShootSomething: (hit: THREE.Intersection) => void,
+    private readonly events: EventListener,
     private readonly props: GunProps
   ) {
     this.firingMode = this.getFiringMode(props.firingModeName);
@@ -49,8 +50,6 @@ export class Gun {
 
   update(dt: number, elapsed: number) {
     this.firingMode.update(dt);
-
-    TWEEN.update();
   }
 
   private setupGunModel(name: string) {
@@ -163,7 +162,7 @@ export class Gun {
 
     if (hit) {
       this.placeStaticDecal(hit);
-      this.onShootSomething(hit);
+      this.events.fire("shot-intersect", hit);
     }
   };
 

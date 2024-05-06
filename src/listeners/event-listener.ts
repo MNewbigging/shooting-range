@@ -1,5 +1,7 @@
+import * as THREE from "three";
+
 export interface EventMap {
-  "event-name": null; // event name to params object
+  "shot-intersect": THREE.Intersection;
 }
 
 type EventCallback = (event: any) => void;

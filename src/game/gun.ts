@@ -5,6 +5,7 @@ import { GameLoader } from "../loaders/game-loader";
 import { MouseListener } from "../listeners/mouse-listener";
 import { TextureLoader } from "../loaders/texture-loader";
 import { EventListener } from "../listeners/event-listener";
+import { KeyboardListener } from "../listeners/keyboard-listener";
 
 export interface GunProps {
   name: "pistol";
@@ -25,29 +26,32 @@ export class Gun {
   private decalSize = new THREE.Vector3(0.1, 0.1, 0.1);
 
   private idleAnim: TWEEN.Tween<any>;
+  private mixer: THREE.AnimationMixer;
+  private reloadAction?: THREE.AnimationAction;
 
   constructor(
     private readonly gameLoader: GameLoader,
     private readonly mouseListener: MouseListener,
+    private readonly keyboardListener: KeyboardListener,
+    private readonly events: EventListener,
     private readonly scene: THREE.Scene,
     private readonly camera: THREE.PerspectiveCamera,
-    private readonly events: EventListener,
+
     private readonly props: GunProps
   ) {
     this.firingMode = this.getFiringMode(props.firingModeName);
     this.object = this.setupGunModel(props.name);
-    let found = false;
-    this.object.traverse((child) => {
-      if (child.animations.length) {
-        found = true;
-      }
-    });
-    console.log("found after: ", found);
     this.bulletDecalMaterial = this.setupBulletDecalMaterial();
 
     // Enter idle animation by default
     this.idleAnim = this.setupIdleAnim();
     this.idleAnim.start();
+
+    this.mixer = new THREE.AnimationMixer(this.object);
+    this.reloadAction = this.setupReloadAnim();
+
+    // Listen to
+    this.keyboardListener.on("r", this.onPressR);
   }
 
   setFiringMode(mode: FiringModeName) {
@@ -57,6 +61,7 @@ export class Gun {
 
   update(dt: number, elapsed: number) {
     this.firingMode.update(dt);
+    this.mixer.update(dt);
   }
 
   private setupGunModel(name: string) {
@@ -106,6 +111,19 @@ export class Gun {
     reverse.chain(anim);
 
     return anim;
+  }
+
+  private setupReloadAnim() {
+    let reloadAction: THREE.AnimationAction | undefined;
+    this.object.traverse((child) => {
+      if (child.animations.length) {
+        reloadAction = this.mixer.clipAction(child.animations[0]);
+      }
+    });
+
+    reloadAction?.setLoop(THREE.LoopOnce, 1);
+
+    return reloadAction;
   }
 
   private getRecoilAnim() {
@@ -262,6 +280,11 @@ export class Gun {
 
     this.scene.add(decal);
   }
+
+  private onPressR = () => {
+    console.log("reload");
+    this.reloadAction?.reset().play();
+  };
 }
 
 // A firing mode doesn't do the firing, just determines WHEN to fire

@@ -98,9 +98,10 @@ export class FirstScene {
     return new Gun(
       this.gameLoader,
       this.mouseListener,
+      this.keyboardListener,
+      this.events,
       this.scene,
       this.camera,
-      this.events,
       {
         name: "pistol",
         firingModeName: "semi-auto",

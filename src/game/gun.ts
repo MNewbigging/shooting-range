@@ -318,7 +318,7 @@ class SemiAutoFiringMode extends FiringMode {
   }
 
   private canFire() {
-    return this.shotTimer <= 0;
+    return this.mouseListener.lmb && this.shotTimer <= 0;
   }
 
   private onMouseDown = () => {

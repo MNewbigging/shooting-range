@@ -52,7 +52,7 @@ export class FirstScene {
     this.gun = this.setupGun();
 
     // Get the scene object
-    const range = this.gameLoader.modelLoader.get("shooting-range");
+    const range = this.gameLoader.modelLoader.shootingRange;
     this.scene.add(range);
 
     // Extract targets from the main scene object

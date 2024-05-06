@@ -36,6 +36,13 @@ export class Gun {
   ) {
     this.firingMode = this.getFiringMode(props.firingModeName);
     this.object = this.setupGunModel(props.name);
+    let found = false;
+    this.object.traverse((child) => {
+      if (child.animations.length) {
+        found = true;
+      }
+    });
+    console.log("found after: ", found);
     this.bulletDecalMaterial = this.setupBulletDecalMaterial();
 
     // Enter idle animation by default
@@ -53,7 +60,7 @@ export class Gun {
   }
 
   private setupGunModel(name: string) {
-    const mesh = this.gameLoader.modelLoader.get(name);
+    const mesh = this.gameLoader.modelLoader.pistol;
     const texture = this.gameLoader.textureLoader.get("weapon-26");
     if (texture) {
       TextureLoader.applyModelTexture(mesh, texture);

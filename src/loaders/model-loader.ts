@@ -2,29 +2,18 @@ import * as THREE from "three";
 import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
-import { TextureLoader } from "./texture-loader";
 
 export class ModelLoader {
   doneLoading = false;
 
-  private models = new Map<string, THREE.Object3D>();
+  // Models used in this game, default to debug objects
+  shootingRange = this.createDebugObject();
+  pistol = this.createDebugObject();
+
   private loadingManager = new THREE.LoadingManager();
 
-  get(modelName: string): THREE.Object3D {
-    // Return the model if found
-    const model = this.models.get(modelName);
-    if (model) {
-      return SkeletonUtils.clone(model);
-    }
-
-    // Otherwise create debug object and error message
-    console.error(
-      `Could not find ${modelName}, returning debug object instead`
-    );
-    return new THREE.Mesh(
-      new THREE.SphereGeometry(),
-      new THREE.MeshBasicMaterial({ color: "red" })
-    );
+  clone(object: THREE.Object3D) {
+    return SkeletonUtils.clone(object);
   }
 
   load(onLoad: () => void) {
@@ -49,7 +38,7 @@ export class ModelLoader {
   private loadScene(loader: GLTFLoader) {
     const sceneUrl = new URL("/models/shootingRange.glb", import.meta.url).href;
     loader.load(sceneUrl, (gltf) => {
-      this.models.set("shooting-range", gltf.scene);
+      this.shootingRange = gltf.scene;
     });
   }
 
@@ -57,26 +46,7 @@ export class ModelLoader {
     const pistolUrl = new URL("/models/pistol.fbx", import.meta.url).href;
     loader.load(pistolUrl, (group) => {
       this.scaleSyntyModel(group);
-      this.models.set("pistol", group);
-    });
-  }
-
-  private loadSyntyModel(loader: FBXLoader) {
-    const url = new URL("/bandit.fbx", import.meta.url).href;
-    loader.load(url, (group) => {
-      this.scaleSyntyModel(group);
-      this.models.set("bandit", group);
-    });
-  }
-
-  private applyModelTexture(group: THREE.Group, texture: THREE.Texture) {
-    group.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        const mat = child.material as THREE.MeshLambertMaterial;
-        mat.map = texture;
-        // Synty models have this true by default, making model black
-        mat.vertexColors = false;
-      }
+      this.pistol = group;
     });
   }
 
@@ -84,5 +54,12 @@ export class ModelLoader {
     // Synty models need scale adjusting, unless done in blender beforehand
     group.scale.multiplyScalar(0.01);
     group.updateMatrixWorld();
+  }
+
+  private createDebugObject(): THREE.Object3D {
+    return new THREE.Mesh(
+      new THREE.SphereGeometry(0.5, 32, 32),
+      new THREE.MeshBasicMaterial({ color: "red" })
+    );
   }
 }

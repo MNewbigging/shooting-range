@@ -138,6 +138,7 @@ export class GameState {
     // Create the gun class for the pistol
     const pistolGun = new Gun(
       pistol,
+      new THREE.Vector3(0.15, -0.2, -0.5),
       this.gameLoader,
       this.mouseListener,
       this.keyboardListener,
@@ -167,6 +168,7 @@ export class GameState {
 
     const rifleGun = new Gun(
       rifle,
+      new THREE.Vector3(0.15, -0.2, -0.3),
       this.gameLoader,
       this.mouseListener,
       this.keyboardListener,
@@ -242,7 +244,7 @@ export class GameState {
     targetPos.y = gun.object.position.y;
 
     new TWEEN.Tween(gun.object.position)
-      .to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 200)
+      .to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 250)
       .easing(TWEEN.Easing.Quadratic.In)
       .start()
       .onComplete(() => {
@@ -255,15 +257,28 @@ export class GameState {
         // Reset any rotation so it faces the right way
         gun.object.rotation.set(0, Math.PI, 0);
 
+        // Hide it until ready to show
+        gun.object.visible = false;
+
         // Equip straight away
         this.equipGun(gun);
       });
   }
 
-  private equipGun(gun: Gun) {
-    // Unequip then hide the current gun
+  private unequipGun(gun: Gun): Promise<void> {
+    return new Promise<void>((resolve) => {
+      gun.unequip();
+      const hideAnim = this.getHideGunAnim(gun);
+      hideAnim.start().onComplete(() => resolve());
+    });
+  }
 
-    // Then remove it from the camera
+  private async equipGun(gun: Gun) {
+    // Unequip then hide the current gun
+    if (this.equippedGun) {
+      await this.unequipGun(this.equippedGun);
+      this.camera.remove(this.equippedGun.object);
+    }
 
     // Add new gun to the camera straight away
     this.camera.add(gun.object);
@@ -294,10 +309,24 @@ export class GameState {
         },
         250
       )
-      .easing(TWEEN.Easing.Back.Out);
+      .easing(TWEEN.Easing.Back.Out)
+      .onStart(() => (gun.object.visible = true));
   }
 
-  private hideGun() {}
+  private getHideGunAnim(gun: Gun) {
+    const targetPosY = -1;
+    const targetRotX = -Math.PI;
+
+    return new TWEEN.Tween(gun.object)
+      .to(
+        {
+          position: { y: targetPosY },
+          rotation: { x: -Math.PI },
+        },
+        250
+      )
+      .easing(TWEEN.Easing.Quadratic.In);
+  }
 }
 
 /**

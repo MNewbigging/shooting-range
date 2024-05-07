@@ -27,7 +27,6 @@ export type FiringModeName = "semi-auto" | "auto" | "burst";
  * - being unequipped (hides itself animation)
  */
 export class Gun {
-  readonly holdPosition = new THREE.Vector3(0.15, -0.2, -0.5);
   equipped = false;
 
   private raycaster = new THREE.Raycaster();
@@ -44,6 +43,7 @@ export class Gun {
 
   constructor(
     public object: THREE.Object3D,
+    public holdPosition: THREE.Vector3,
     private gameLoader: GameLoader,
     private mouseListener: MouseListener,
     private keyboardListener: KeyboardListener,
@@ -76,7 +76,7 @@ export class Gun {
   unequip() {
     // Stop any active animations
     this.idleAnim.stop();
-    this.reloadAction?.stop();
+    this.reloadAction?.stop().reset();
 
     // Stop listening for input
     this.firingMode.disable();

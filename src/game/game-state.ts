@@ -6,11 +6,12 @@ import { makeAutoObservable, observable } from "mobx";
 import { MouseListener } from "../listeners/mouse-listener";
 import { KeyboardListener } from "../listeners/keyboard-listener";
 import { EventListener } from "../listeners/event-listener";
+import { RenderPipeline } from "./render-pipeline";
 
 export class GameState {
   @observable paused = false;
 
-  private renderer: THREE.WebGLRenderer;
+  private renderPipeline: RenderPipeline;
   private clock = new THREE.Clock();
 
   private mouseListener: MouseListener;
@@ -23,15 +24,15 @@ export class GameState {
     makeAutoObservable(this);
 
     // Setup renderer
-    this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.outputEncoding = THREE.sRGBEncoding;
-    this.renderer.toneMapping = THREE.LinearToneMapping;
-    this.renderer.toneMappingExposure = 1;
-    this.renderer.shadowMap.enabled = true;
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.LinearToneMapping;
+    renderer.toneMappingExposure = 1;
+    renderer.shadowMap.enabled = true;
 
     // Add canvas to dom
-    const canvas = this.renderer.domElement;
+    const canvas = renderer.domElement;
     const canvasRoot = document.getElementById("canvas-root");
     canvasRoot?.appendChild(canvas);
     canvas.requestPointerLock();
@@ -43,16 +44,19 @@ export class GameState {
 
     // Scenes
     this.firstScene = new FirstScene(
-      this.renderer,
+      renderer,
       this.gameLoader,
       this.mouseListener,
       this.keyboardListener,
       this.events
     );
 
-    // Handle any canvas resize events
-    window.addEventListener("resize", this.onCanvasResize);
-    this.onCanvasResize();
+    // Setup render pipeline
+    this.renderPipeline = new RenderPipeline(
+      renderer,
+      this.firstScene.scene,
+      this.firstScene.camera
+    );
 
     // Handle pointer lock events
     document.addEventListener("pointerlockchange", this.onPointerLockChange);
@@ -63,27 +67,14 @@ export class GameState {
   }
 
   resumeGame = () => {
-    this.renderer.domElement.requestPointerLock();
+    this.renderPipeline.canvas.requestPointerLock();
     this.paused = false;
     this.mouseListener.enable();
   };
 
-  private onCanvasResize = () => {
-    const canvas = this.renderer.domElement;
-    const camera = this.firstScene.camera;
-
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    camera.aspect = canvas.clientWidth / canvas.clientHeight;
-
-    camera.updateProjectionMatrix();
-  };
-
   private onPointerLockChange = () => {
     // If exiting
-    if (document.pointerLockElement !== this.renderer.domElement) {
+    if (document.pointerLockElement !== this.renderPipeline.canvas) {
       this.pauseGame();
     }
   };
@@ -106,7 +97,7 @@ export class GameState {
     if (!this.paused) {
       this.firstScene.update(dt, elapsed);
       TWEEN.update();
-      this.renderer.render(this.firstScene.scene, this.firstScene.camera);
+      this.renderPipeline.render(dt);
     }
   };
 }

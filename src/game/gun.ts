@@ -8,16 +8,23 @@ import { EventListener } from "../listeners/event-listener";
 import { KeyboardListener } from "../listeners/keyboard-listener";
 
 export interface GunProps {
-  name: "pistol";
+  object: THREE.Object3D;
   firingModeName: FiringModeName;
   rpm: number;
 }
 
 export type FiringModeName = "semi-auto" | "auto" | "burst";
 
+/**
+ * Can a gun exist without being equipped?
+ *
+ * Guns will have:
+ * show and hide animation
+ * idle and fire animation
+ * reload animation
+ */
 export class Gun {
   private raycaster = new THREE.Raycaster();
-  private object: THREE.Object3D;
 
   private firingMode: FiringMode;
 
@@ -30,17 +37,17 @@ export class Gun {
   private reloadAction?: THREE.AnimationAction;
 
   constructor(
-    private readonly gameLoader: GameLoader,
-    private readonly mouseListener: MouseListener,
-    private readonly keyboardListener: KeyboardListener,
-    private readonly events: EventListener,
-    private readonly scene: THREE.Scene,
-    private readonly camera: THREE.PerspectiveCamera,
-
-    private readonly props: GunProps
+    private gameLoader: GameLoader,
+    private mouseListener: MouseListener,
+    private keyboardListener: KeyboardListener,
+    private events: EventListener,
+    private scene: THREE.Scene,
+    private camera: THREE.PerspectiveCamera,
+    private object: THREE.Object3D,
+    private firingModeName: FiringModeName,
+    private rpm: number
   ) {
-    this.firingMode = this.getFiringMode(props.firingModeName);
-    this.object = this.setupGunModel(props.name);
+    this.firingMode = this.getFiringMode(firingModeName);
     this.bulletDecalMaterial = this.setupBulletDecalMaterial();
 
     // Enter idle animation by default
@@ -78,7 +85,7 @@ export class Gun {
     mesh.position.set(0.15, -0.2, -0.5);
 
     this.camera.add(mesh);
-    this.scene.add(this.camera);
+    this.scene.add(this.camera); // should only do this once, above this class
 
     return mesh;
   }
@@ -163,14 +170,14 @@ export class Gun {
     if (name === "auto") {
       return (this.firingMode = new AutomaticFiringMode(
         this.mouseListener,
-        this.props.rpm,
+        this.rpm,
         this.fire
       ));
     }
 
     return (this.firingMode = new SemiAutoFiringMode(
       this.mouseListener,
-      this.props.rpm,
+      this.rpm,
       this.fire
     ));
   }

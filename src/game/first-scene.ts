@@ -7,6 +7,7 @@ import { addGui } from "../utils/utils";
 import { KeyboardListener } from "../listeners/keyboard-listener";
 import { EventListener } from "../listeners/event-listener";
 import { TargetManager } from "./target-manager";
+import { TextureLoader } from "../loaders/texture-loader";
 /**
  * Target logic:
  *
@@ -27,13 +28,45 @@ import { TargetManager } from "./target-manager";
  * How do I do the sliders? I can grab them and move them, but I need to know end points...
  */
 
+/**
+ * How to equip items?
+ *
+ * - Pick it up from the world by left-clicking it
+ * - It gets added to an array of equipped items (index + 1 is hotkey)
+ *
+ * When picking up item or pressing equipped item hotkey:
+ * - Hide the current item, if any
+ * - Show the new item
+ *
+ * So I need:
+ * - a ref to the current item in order to hide it
+ * - a ref to the new item in order to show it
+ *
+ * To test:
+ * - put the gun object on the table (try without making the gun class)
+ * - outline pass on hover
+ * - on left click, put it hands without show anim
+ *
+ * Then:
+ * - add a show animation to newly picked up gun
+ * - add another gun, test swapping...
+ *
+ */
+interface EquippableItem {}
+
 export class FirstScene {
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera();
   private controls: PointerLockControls;
 
-  private gun: Gun;
   private targetManager: TargetManager;
+
+  // Equipped items
+  private equippedItems = []; // First slot is always empty
+  private currentItem = 0;
+
+  // All the guns found in the game
+  //private gun: Gun;
 
   constructor(
     private renderer: THREE.WebGLRenderer,
@@ -49,7 +82,7 @@ export class FirstScene {
 
     this.setupCamera();
     this.setupLights();
-    this.gun = this.setupGun();
+    this.setupObjects();
 
     // Get the scene object
     const range = this.gameLoader.modelLoader.shootingRange;
@@ -61,13 +94,17 @@ export class FirstScene {
     this.scene.background = new THREE.Color("#1680AF");
   }
 
+  getScene() {
+    return this.scene;
+  }
+
   getCamera() {
     return this.camera;
   }
 
   update(dt: number, elapsed: number) {
     // Update
-    this.gun.update(dt, elapsed);
+    //Need a ref to the current item to update itthis.gun.update(dt, elapsed);
 
     // Targets
     this.targetManager.update(dt);
@@ -82,7 +119,7 @@ export class FirstScene {
     this.camera.near = 0.1;
     const canvas = this.renderer.domElement;
     this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    this.camera.position.set(0, 1.7, 2);
+    this.camera.position.set(0, 1.7, 1.2);
   }
 
   private setupLights() {
@@ -94,7 +131,25 @@ export class FirstScene {
     this.scene.add(directLight);
   }
 
+  private setupObjects() {
+    const pistol = this.gameLoader.modelLoader.pistol;
+
+    // Apply the basic weapon skin to the pistol
+    const texture = this.gameLoader.textureLoader.get("weapon-26");
+    if (texture) {
+      TextureLoader.applyModelTexture(pistol, texture);
+    }
+
+    // Place the pistol object on the table
+
+    pistol.position.set(0.8, 1.05, 0.5);
+    pistol.rotateY(Math.PI + 0.5);
+    pistol.rotateZ(Math.PI / 2);
+    this.scene.add(pistol);
+  }
+
   private setupGun() {
+    // Pistol
     return new Gun(
       this.gameLoader,
       this.mouseListener,
@@ -102,11 +157,9 @@ export class FirstScene {
       this.events,
       this.scene,
       this.camera,
-      {
-        name: "pistol",
-        firingModeName: "semi-auto",
-        rpm: 320,
-      }
+      this.gameLoader.modelLoader.pistol,
+      "semi-auto",
+      120
     );
   }
 }

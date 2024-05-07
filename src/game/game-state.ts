@@ -24,6 +24,7 @@ export class GameState {
   private renderPipeline: RenderPipeline;
   private clock = new THREE.Clock();
   private controls: PointerLockControls;
+  private raycaster = new THREE.Raycaster();
 
   private mouseListener: MouseListener;
   private keyboardListener: KeyboardListener;
@@ -48,7 +49,6 @@ export class GameState {
     document.addEventListener("pointerlockerror", this.onPointerLockError);
 
     // Setup
-    this.setupCamera();
     this.setupLights();
     this.setupObjects();
 
@@ -62,6 +62,7 @@ export class GameState {
       this.camera,
       this.renderPipeline.canvas
     );
+    this.controls.addEventListener("change", this.onCameraMove);
 
     this.scene.background = new THREE.Color("#1680AF");
 
@@ -137,6 +138,25 @@ export class GameState {
 
       TWEEN.update();
       this.renderPipeline.render(dt);
+    }
+  };
+
+  private onCameraMove = () => {
+    const { pistol } = this.gameLoader.modelLoader;
+
+    // First clear any outlines
+    this.renderPipeline.clearOutlines();
+
+    const interactive = [pistol];
+
+    // Test for intersections against interactive objects
+    this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
+    for (const object of interactive) {
+      const intersections = this.raycaster.intersectObject(object, true);
+      if (intersections.length) {
+        this.renderPipeline.outlineObject(object);
+        break;
+      }
     }
   };
 }

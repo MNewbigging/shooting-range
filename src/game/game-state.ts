@@ -34,23 +34,9 @@ export class GameState {
   constructor(private gameLoader: GameLoader) {
     makeAutoObservable(this);
 
-    // Setup renderer
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.toneMapping = THREE.LinearToneMapping;
-    renderer.toneMappingExposure = 1;
-    renderer.shadowMap.enabled = true;
-
-    // Add canvas to dom
-    const canvas = renderer.domElement;
-    const canvasRoot = document.getElementById("canvas-root");
-    canvasRoot?.appendChild(canvas);
-    canvas.requestPointerLock();
-
     // Setup render pipeline
     this.camera = this.setupCamera();
-    this.renderPipeline = new RenderPipeline(renderer, this.scene, this.camera);
+    this.renderPipeline = new RenderPipeline(this.scene, this.camera);
 
     // Listeners
     this.mouseListener = new MouseListener();
@@ -134,7 +120,6 @@ export class GameState {
     }
 
     // Place the pistol object on the table
-
     pistol.position.set(0.8, 1.05, 0.5);
     pistol.rotateY(Math.PI + 0.5);
     pistol.rotateZ(Math.PI / 2);

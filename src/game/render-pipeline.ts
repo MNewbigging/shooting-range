@@ -8,13 +8,27 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
 export class RenderPipeline {
   private effectComposer: EffectComposer;
   private renderPass: RenderPass;
-  public outlinePass: OutlinePass;
+  private outlinePass: OutlinePass;
+  private renderer: THREE.WebGLRenderer;
 
   constructor(
-    private renderer: THREE.WebGLRenderer,
     private scene: THREE.Scene,
     private camera: THREE.PerspectiveCamera
   ) {
+    // Setup renderer
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.outputEncoding = THREE.sRGBEncoding;
+    this.renderer.toneMapping = THREE.LinearToneMapping;
+    this.renderer.toneMappingExposure = 1;
+    this.renderer.shadowMap.enabled = true;
+
+    // Add canvas to dom
+    const canvas = this.canvas;
+    const canvasRoot = document.getElementById("canvas-root");
+    canvasRoot?.appendChild(canvas);
+    canvas.requestPointerLock();
+
     window.addEventListener("resize", this.onCanvasResize);
     this.onCanvasResize();
 

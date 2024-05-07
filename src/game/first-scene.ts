@@ -55,8 +55,8 @@ import { TextureLoader } from "../loaders/texture-loader";
 interface EquippableItem {}
 
 export class FirstScene {
-  private scene = new THREE.Scene();
-  private camera = new THREE.PerspectiveCamera();
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera();
   private controls: PointerLockControls;
 
   private targetManager: TargetManager;
@@ -94,23 +94,12 @@ export class FirstScene {
     this.scene.background = new THREE.Color("#1680AF");
   }
 
-  getScene() {
-    return this.scene;
-  }
-
-  getCamera() {
-    return this.camera;
-  }
-
   update(dt: number, elapsed: number) {
     // Update
     //Need a ref to the current item to update itthis.gun.update(dt, elapsed);
 
     // Targets
     this.targetManager.update(dt);
-
-    // Draw
-    this.renderer.render(this.scene, this.camera);
   }
 
   private setupCamera() {

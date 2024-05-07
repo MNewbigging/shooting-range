@@ -70,7 +70,7 @@ export class GameState {
 
   private onCanvasResize = () => {
     const canvas = this.renderer.domElement;
-    const camera = this.firstScene.getCamera();
+    const camera = this.firstScene.camera;
 
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
@@ -106,6 +106,7 @@ export class GameState {
     if (!this.paused) {
       this.firstScene.update(dt, elapsed);
       TWEEN.update();
+      this.renderer.render(this.firstScene.scene, this.firstScene.camera);
     }
   };
 }

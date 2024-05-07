@@ -159,9 +159,16 @@ export class GameState {
     //const elapsed = this.clock.getElapsedTime();
 
     if (!this.paused) {
+      // Targets
       this.targetManager.update(dt);
 
+      // Active item
+      this.equippedGun?.update(dt);
+
+      // Animations
       TWEEN.update();
+
+      // Draw
       this.renderPipeline.render(dt);
     }
   };
@@ -237,10 +244,13 @@ export class GameState {
     gun.object.position.set(gun.holdPosition.x, -1, gun.holdPosition.z);
     gun.object.rotation.x = -Math.PI;
 
-    // Show then equip the new gun
+    // Start the show animation
+    // todo cancel this if swapping before shown
     const showAnim = this.getShowGunAnim(gun);
-    console.log("gun rot", gun.object.rotation.x);
-    showAnim.start();
+    showAnim.start().onComplete(() => {
+      gun.equip();
+      this.equippedGun = gun;
+    });
   }
 
   private getShowGunAnim(gun: Gun) {

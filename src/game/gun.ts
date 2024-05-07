@@ -28,6 +28,7 @@ export type FiringModeName = "semi-auto" | "auto" | "burst";
  */
 export class Gun {
   readonly holdPosition = new THREE.Vector3(0.15, -0.2, -0.5);
+  equipped = false;
 
   private raycaster = new THREE.Raycaster();
 
@@ -61,12 +62,15 @@ export class Gun {
   }
 
   equip() {
-    // Re-create idle animation for this position
+    // Re-create idle animation for this position then start it
     this.idleAnim = this.setupIdleAnim();
+    this.idleAnim.start();
 
     // Can now listen for input
     this.firingMode.enable();
     this.keyboardListener.on("r", this.onPressR);
+
+    this.equipped = true;
   }
 
   unequip() {
@@ -77,6 +81,8 @@ export class Gun {
     // Stop listening for input
     this.firingMode.disable();
     this.keyboardListener.off("r", this.onPressR);
+
+    this.equipped = false;
   }
 
   setFiringMode(mode: FiringModeName) {
@@ -84,7 +90,11 @@ export class Gun {
     this.firingMode = this.getFiringMode(mode);
   }
 
-  update(dt: number, elapsed: number) {
+  update(dt: number) {
+    if (!this.equipped) {
+      return;
+    }
+
     this.firingMode.update(dt);
     this.mixer.update(dt);
   }
@@ -296,7 +306,6 @@ export class Gun {
 abstract class FiringMode {
   readonly timeBetweenShots: number;
   protected shotTimer = 0;
-  protected enabled = false;
 
   constructor(rpm: number, private readonly fire: () => void) {
     this.timeBetweenShots = 1 / (rpm / 60);
@@ -307,10 +316,6 @@ abstract class FiringMode {
   abstract disable(): void;
 
   update(dt: number) {
-    if (!this.enabled) {
-      return;
-    }
-
     this.shotTimer -= dt;
   }
 

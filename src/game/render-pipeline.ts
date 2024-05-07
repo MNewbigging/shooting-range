@@ -5,28 +5,20 @@ import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
 
-export class Renderer {
+export class RenderPipeline {
   private effectComposer: EffectComposer;
-  private renderer: THREE.WebGLRenderer;
   private renderPass: RenderPass;
   public outlinePass: OutlinePass;
 
   constructor(
+    private renderer: THREE.WebGLRenderer,
     private scene: THREE.Scene,
     private camera: THREE.PerspectiveCamera
   ) {
-    // Setup renderer
-    this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.outputEncoding = THREE.sRGBEncoding;
-    this.renderer.toneMapping = THREE.LinearToneMapping;
-    this.renderer.toneMappingExposure = 1;
-    this.renderer.shadowMap.enabled = true;
+    window.addEventListener("resize", this.onCanvasResize);
+    this.onCanvasResize();
 
     // Setup pipeline
-    const canvas = this.renderer.domElement;
-
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     this.effectComposer = new EffectComposer(this.renderer);
     this.effectComposer.renderToScreen = true;
 
@@ -36,7 +28,7 @@ export class Renderer {
 
     // Outline pass
     this.outlinePass = new OutlinePass(
-      new THREE.Vector2(canvas.clientWidth, canvas.clientHeight),
+      new THREE.Vector2(this.canvas.clientWidth, this.canvas.clientHeight),
       scene,
       camera
     );
@@ -48,9 +40,6 @@ export class Renderer {
 
     // This corrects the output from the outline pass for srgbe encoding
     this.effectComposer.addPass(new ShaderPass(GammaCorrectionShader));
-
-    window.addEventListener("resize", this.onCanvasResize);
-    this.onCanvasResize();
   }
 
   get canvas() {
@@ -70,15 +59,15 @@ export class Renderer {
   }
 
   private onCanvasResize = () => {
-    const canvas = this.renderer.domElement;
-
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    this.renderer.setSize(
+      this.canvas.clientWidth,
+      this.canvas.clientHeight,
+      false
+    );
 
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    this.effectComposer.setSize(canvas.clientWidth, canvas.clientHeight);
-
-    this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    this.camera.aspect = this.canvas.clientWidth / this.canvas.clientHeight;
 
     this.camera.updateProjectionMatrix();
   };

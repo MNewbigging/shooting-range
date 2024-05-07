@@ -314,13 +314,10 @@ export class GameState {
   }
 
   private getHideGunAnim(gun: Gun) {
-    const targetPosY = -1;
-    const targetRotX = -Math.PI;
-
     return new TWEEN.Tween(gun.object)
       .to(
         {
-          position: { y: targetPosY },
+          position: { y: -1 },
           rotation: { x: -Math.PI },
         },
         250
@@ -328,16 +325,3 @@ export class GameState {
       .easing(TWEEN.Easing.Quadratic.In);
   }
 }
-
-/**
- * I deliberately test intersections against a particular object3d, so I know what to do on click
- *
- * What if I could:
- * - create the gun class, give it the gun object ref
- * - position the gun in the world
- *
- * - test for intersections against the scene
- * - if I click a gun, then pick it up
- *
- * might avoid more custom/specific logic
- */

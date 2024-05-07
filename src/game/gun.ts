@@ -39,8 +39,8 @@ export class Gun {
   private mixer: THREE.AnimationMixer;
   private reloadAction?: THREE.AnimationAction;
 
-  private readonly holdPosition = new THREE.Vector3(0.15, -0.2, -0.5);
-  private readonly holdRotationY = Math.PI;
+  readonly holdPosition = new THREE.Vector3(0.15, -0.2, -0.5);
+  readonly holdRotationY = Math.PI;
 
   constructor(
     public object: THREE.Object3D,

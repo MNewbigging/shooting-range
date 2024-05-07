@@ -36,7 +36,9 @@ export class GameState {
   private events: EventListener;
 
   private targetManager: TargetManager;
-  private tableGuns: Gun[] = [];
+  private tableGuns: Gun[] = []; // in the world
+  private heldGuns: Gun[] = []; // on the player
+  private equippedGun?: Gun; // in player's hands
 
   constructor(private gameLoader: GameLoader) {
     makeAutoObservable(this);
@@ -127,6 +129,7 @@ export class GameState {
     }
 
     // Place the pistol object on the table
+
     pistol.position.set(0.8, 1.05, 0.5);
     pistol.rotateY(Math.PI + 0.5);
     pistol.rotateZ(Math.PI / 2);
@@ -164,19 +167,16 @@ export class GameState {
   };
 
   private onCameraMove = () => {
-    const { pistol } = this.gameLoader.modelLoader;
-
     // First clear any outlines
     this.renderPipeline.clearOutlines();
 
-    const interactive = [pistol];
-
-    // Test for intersections against interactive objects
     this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
-    for (const object of interactive) {
-      const intersections = this.raycaster.intersectObject(object, true);
+
+    // Are we looking at a table gun?
+    for (const gun of this.tableGuns) {
+      const intersections = this.raycaster.intersectObject(gun.object, true);
       if (intersections.length) {
-        this.renderPipeline.outlineObject(object);
+        this.renderPipeline.outlineObject(gun.object);
         break;
       }
     }
@@ -188,31 +188,58 @@ export class GameState {
       return;
     }
 
-    // Check for intersection with top-level scene children
     this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
-    const intersections = this.raycaster.intersectObjects(
-      this.scene.children,
-      false
-    );
-    if (!intersections.length) {
-      return;
-    }
 
-    // Check if we tried to pick up a gun
-    const gun = this.tableGuns.find(
-      (g) => g.object === intersections[0].object
-    );
-    if (gun) {
-      console.log("hit gun on table");
+    // Check for clicks on table guns
+    for (const gun of this.tableGuns) {
+      const intersections = this.raycaster.intersectObject(gun.object);
+      if (intersections.length) {
+        // Pick it up
+        this.pickupGun(gun);
+        return;
+      }
     }
   };
 
   private pickupGun(gun: Gun) {
     // Begin the pickup animation - move to just below camera
-    // On end, should equip that gun
+    const targetPos = this.camera.position.clone();
+    targetPos.y = gun.object.position.y;
+
+    new TWEEN.Tween(gun.object.position)
+      .to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 200)
+      .easing(TWEEN.Easing.Quadratic.In)
+      .start()
+      .onComplete(() => {
+        // Remove from table guns
+        this.tableGuns = this.tableGuns.filter((g) => g.object !== gun.object);
+
+        // Add to held guns
+        this.heldGuns.push(gun);
+
+        // Reset any rotation so it faces the right way
+        gun.object.rotation.set(0, Math.PI, 0);
+
+        // Equip straight away
+        this.equipGun(gun);
+      });
   }
 
-  private showGun() {}
+  private equipGun(gun: Gun) {
+    // Unequip then hide the current gun
+
+    // Then remove it from the camera
+
+    // Add new gun to the camera straight away
+    this.camera.add(gun.object);
+
+    // Show then equip the new gun
+  }
+
+  private getShowGunAnim(gun: Gun) {
+    // Animate from current off-screen pos into holding position
+  }
+
   private hideGun() {}
 }
 

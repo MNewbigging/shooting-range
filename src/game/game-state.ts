@@ -233,11 +233,30 @@ export class GameState {
     // Add new gun to the camera straight away
     this.camera.add(gun.object);
 
+    // Position it ready for the show animation
+    gun.object.position.set(gun.holdPosition.x, -1, gun.holdPosition.z);
+    gun.object.rotation.x = -Math.PI;
+
     // Show then equip the new gun
+    const showAnim = this.getShowGunAnim(gun);
+    console.log("gun rot", gun.object.rotation.x);
+    showAnim.start();
   }
 
   private getShowGunAnim(gun: Gun) {
+    const target = gun.holdPosition.clone();
+    const startRotX = gun.object.rotation.x;
+
     // Animate from current off-screen pos into holding position
+    return new TWEEN.Tween(gun.object)
+      .to(
+        {
+          position: { x: target.x, y: target.y, z: target.z },
+          rotation: { x: startRotX + Math.PI },
+        },
+        250
+      )
+      .easing(TWEEN.Easing.Back.Out);
   }
 
   private hideGun() {}

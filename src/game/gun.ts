@@ -27,6 +27,8 @@ export type FiringModeName = "semi-auto" | "auto" | "burst";
  * - being unequipped (hides itself animation)
  */
 export class Gun {
+  readonly holdPosition = new THREE.Vector3(0.15, -0.2, -0.5);
+
   private raycaster = new THREE.Raycaster();
 
   private firingMode: FiringMode;
@@ -38,9 +40,6 @@ export class Gun {
   private idleAnim: TWEEN.Tween<any>;
   private mixer: THREE.AnimationMixer;
   private reloadAction?: THREE.AnimationAction;
-
-  readonly holdPosition = new THREE.Vector3(0.15, -0.2, -0.5);
-  readonly holdRotationY = Math.PI;
 
   constructor(
     public object: THREE.Object3D,

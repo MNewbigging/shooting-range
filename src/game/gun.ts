@@ -16,12 +16,15 @@ export interface GunProps {
 export type FiringModeName = "semi-auto" | "auto" | "burst";
 
 /**
- * Can a gun exist without being equipped?
+ * A gun is an item
+ * It can exist without being equipped
  *
- * Guns will have:
- * show and hide animation
- * idle and fire animation
- * reload animation
+ * States:
+ * - lying somewhere in the world
+ * - being picked up (moves towards player for a second)
+ * - being equipped (shows itself animation)
+ * - equipped (idle/fire/reload animations)
+ * - being unequipped (hides itself animation)
  */
 export class Gun {
   private raycaster = new THREE.Raycaster();
@@ -36,29 +39,45 @@ export class Gun {
   private mixer: THREE.AnimationMixer;
   private reloadAction?: THREE.AnimationAction;
 
+  private readonly holdPosition = new THREE.Vector3(0.15, -0.2, -0.5);
+  private readonly holdRotationY = Math.PI;
+
   constructor(
+    public object: THREE.Object3D,
     private gameLoader: GameLoader,
     private mouseListener: MouseListener,
     private keyboardListener: KeyboardListener,
     private events: EventListener,
     private scene: THREE.Scene,
     private camera: THREE.PerspectiveCamera,
-    private object: THREE.Object3D,
+
     private firingModeName: FiringModeName,
     private rpm: number
   ) {
     this.firingMode = this.getFiringMode(firingModeName);
     this.bulletDecalMaterial = this.setupBulletDecalMaterial();
-
-    // Enter idle animation by default
     this.idleAnim = this.setupIdleAnim();
-    this.idleAnim.start();
-
     this.mixer = new THREE.AnimationMixer(this.object);
     this.reloadAction = this.setupReloadAnim();
+  }
 
-    // Listen to
+  equip() {
+    // Re-create idle animation for this position
+    this.idleAnim = this.setupIdleAnim();
+
+    // Can now listen for input
+    this.firingMode.enable();
     this.keyboardListener.on("r", this.onPressR);
+  }
+
+  unequip() {
+    // Stop any active animations
+    this.idleAnim.stop();
+    this.reloadAction?.stop();
+
+    // Stop listening for input
+    this.firingMode.disable();
+    this.keyboardListener.off("r", this.onPressR);
   }
 
   setFiringMode(mode: FiringModeName) {
@@ -69,25 +88,6 @@ export class Gun {
   update(dt: number, elapsed: number) {
     this.firingMode.update(dt);
     this.mixer.update(dt);
-  }
-
-  private setupGunModel(name: string) {
-    const mesh = this.gameLoader.modelLoader.pistol;
-    const texture = this.gameLoader.textureLoader.get("weapon-26");
-    if (texture) {
-      TextureLoader.applyModelTexture(mesh, texture);
-    }
-
-    // Turn it around since we're looking into scene along negative z
-    mesh.rotation.y += Math.PI;
-
-    // Offset relative to camera
-    mesh.position.set(0.15, -0.2, -0.5);
-
-    this.camera.add(mesh);
-    this.scene.add(this.camera); // should only do this once, above this class
-
-    return mesh;
   }
 
   private setupBulletDecalMaterial() {
@@ -289,7 +289,6 @@ export class Gun {
   }
 
   private onPressR = () => {
-    console.log("reload");
     this.reloadAction?.reset().play();
   };
 }
@@ -298,14 +297,21 @@ export class Gun {
 abstract class FiringMode {
   readonly timeBetweenShots: number;
   protected shotTimer = 0;
+  protected enabled = false;
 
   constructor(rpm: number, private readonly fire: () => void) {
     this.timeBetweenShots = 1 / (rpm / 60);
   }
 
+  abstract get name(): FiringModeName;
+  abstract enable(): void;
   abstract disable(): void;
 
   update(dt: number) {
+    if (!this.enabled) {
+      return;
+    }
+
     this.shotTimer -= dt;
   }
 
@@ -324,11 +330,21 @@ class AutomaticFiringMode extends FiringMode {
     super(rpm, fire);
   }
 
-  disable(): void {
+  get name(): FiringModeName {
+    return "auto";
+  }
+
+  override enable(): void {
     //
   }
 
-  update() {
+  override disable(): void {
+    //
+  }
+
+  override update(dt: number) {
+    super.update(dt);
+
     if (this.canFire()) {
       this.onFire();
     }
@@ -346,7 +362,13 @@ class SemiAutoFiringMode extends FiringMode {
     fire: () => void
   ) {
     super(rpm, fire);
+  }
 
+  get name(): FiringModeName {
+    return "semi-auto";
+  }
+
+  override enable(): void {
     this.mouseListener.addListener("mousedown", this.onMouseDown);
   }
 

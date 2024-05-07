@@ -9,11 +9,16 @@ import { EventListener } from "../listeners/event-listener";
 import { RenderPipeline } from "./render-pipeline";
 import { TextureLoader } from "../loaders/texture-loader";
 import { TargetManager } from "./target-manager";
+import { Gun } from "./gun";
 
 /**
  * TODO:
  * - Move all of first scene into game state
  * - Then have the render pipeline create the renderer
+ *
+ * - Click callback priority/order:
+ * -- Pick up / interact
+ * -- Shoot (shouldn't shoot things you interact with)
  */
 
 export class GameState {
@@ -31,12 +36,14 @@ export class GameState {
   private events: EventListener;
 
   private targetManager: TargetManager;
+  private tableGuns: Gun[] = [];
 
   constructor(private gameLoader: GameLoader) {
     makeAutoObservable(this);
 
-    // Setup render pipeline
+    // Render pipeline
     this.camera = this.setupCamera();
+    this.scene.add(this.camera);
     this.renderPipeline = new RenderPipeline(this.scene, this.camera);
 
     // Listeners
@@ -44,18 +51,19 @@ export class GameState {
     this.keyboardListener = new KeyboardListener();
     this.events = new EventListener();
 
+    this.mouseListener.addListener("mousedown", this.onMouseDown);
+
     // Handle pointer lock events
     document.addEventListener("pointerlockchange", this.onPointerLockChange);
     document.addEventListener("pointerlockerror", this.onPointerLockError);
 
-    // Setup
+    // Setup game scene
+    this.scene.background = new THREE.Color("#1680AF");
     this.setupLights();
-    this.setupObjects();
+    this.setupPistol();
 
     const range = this.gameLoader.modelLoader.shootingRange;
     this.scene.add(range);
-
-    // Extract targets from the main scene object
     this.targetManager = new TargetManager(range, this.events);
 
     this.controls = new PointerLockControls(
@@ -63,8 +71,6 @@ export class GameState {
       this.renderPipeline.canvas
     );
     this.controls.addEventListener("change", this.onCameraMove);
-
-    this.scene.background = new THREE.Color("#1680AF");
 
     // Start game
     this.update();
@@ -111,7 +117,7 @@ export class GameState {
     this.scene.add(directLight);
   }
 
-  private setupObjects() {
+  private setupPistol() {
     const pistol = this.gameLoader.modelLoader.pistol;
 
     // Apply the basic weapon skin to the pistol
@@ -125,13 +131,29 @@ export class GameState {
     pistol.rotateY(Math.PI + 0.5);
     pistol.rotateZ(Math.PI / 2);
     this.scene.add(pistol);
+
+    // Create the gun class for the pistol
+    const pistolGun = new Gun(
+      pistol,
+      this.gameLoader,
+      this.mouseListener,
+      this.keyboardListener,
+      this.events,
+      this.scene,
+      this.camera,
+      "semi-auto",
+      120
+    );
+
+    // Add it to the table guns
+    this.tableGuns.push(pistolGun);
   }
 
   private update = () => {
     requestAnimationFrame(this.update);
 
     const dt = this.clock.getDelta();
-    const elapsed = this.clock.getElapsedTime();
+    //const elapsed = this.clock.getElapsedTime();
 
     if (!this.paused) {
       this.targetManager.update(dt);
@@ -159,4 +181,50 @@ export class GameState {
       }
     }
   };
+
+  private onMouseDown = () => {
+    // Check for left click
+    if (!this.mouseListener.lmb) {
+      return;
+    }
+
+    // Check for intersection with top-level scene children
+    this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
+    const intersections = this.raycaster.intersectObjects(
+      this.scene.children,
+      false
+    );
+    if (!intersections.length) {
+      return;
+    }
+
+    // Check if we tried to pick up a gun
+    const gun = this.tableGuns.find(
+      (g) => g.object === intersections[0].object
+    );
+    if (gun) {
+      console.log("hit gun on table");
+    }
+  };
+
+  private pickupGun(gun: Gun) {
+    // Begin the pickup animation - move to just below camera
+    // On end, should equip that gun
+  }
+
+  private showGun() {}
+  private hideGun() {}
 }
+
+/**
+ * I deliberately test intersections against a particular object3d, so I know what to do on click
+ *
+ * What if I could:
+ * - create the gun class, give it the gun object ref
+ * - position the gun in the world
+ *
+ * - test for intersections against the scene
+ * - if I click a gun, then pick it up
+ *
+ * might avoid more custom/specific logic
+ */

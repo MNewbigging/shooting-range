@@ -176,7 +176,7 @@ export class GameState {
       this.scene,
       this.camera,
       "auto",
-      420
+      480
     );
 
     this.tableGuns.push(rifleGun);
@@ -288,7 +288,6 @@ export class GameState {
     gun.object.rotation.x = -Math.PI;
 
     // Start the show animation
-    // todo cancel this if swapping before shown
     const showAnim = this.getShowGunAnim(gun);
     showAnim.start().onComplete(() => {
       gun.equip();

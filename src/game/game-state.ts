@@ -63,6 +63,7 @@ export class GameState {
     this.scene.background = new THREE.Color("#1680AF");
     this.setupLights();
     this.setupPistol();
+    this.setupRifle();
 
     const range = this.gameLoader.modelLoader.shootingRange;
     this.scene.add(range);
@@ -129,7 +130,6 @@ export class GameState {
     }
 
     // Place the pistol object on the table
-
     pistol.position.set(0.8, 1.05, 0.5);
     pistol.rotateY(Math.PI + 0.5);
     pistol.rotateZ(Math.PI / 2);
@@ -150,6 +150,34 @@ export class GameState {
 
     // Add it to the table guns
     this.tableGuns.push(pistolGun);
+  }
+
+  private setupRifle() {
+    const rifle = this.gameLoader.modelLoader.rifle;
+
+    const texture = this.gameLoader.textureLoader.get("weapon-26");
+    if (texture) {
+      TextureLoader.applyModelTexture(rifle, texture);
+    }
+
+    rifle.position.set(0.8, 1.05, 1.2);
+    rifle.rotateY(Math.PI - 0.2);
+    rifle.rotateZ(Math.PI / 2);
+    this.scene.add(rifle);
+
+    const rifleGun = new Gun(
+      rifle,
+      this.gameLoader,
+      this.mouseListener,
+      this.keyboardListener,
+      this.events,
+      this.scene,
+      this.camera,
+      "auto",
+      420
+    );
+
+    this.tableGuns.push(rifleGun);
   }
 
   private update = () => {

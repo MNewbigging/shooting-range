@@ -9,6 +9,7 @@ export class ModelLoader {
   // Models used in this game, default to debug objects
   shootingRange = this.createDebugObject();
   pistol = this.createDebugObject();
+  rifle = this.createDebugObject();
 
   private loadingManager = new THREE.LoadingManager();
 
@@ -33,6 +34,7 @@ export class ModelLoader {
 
     const fbxLoader = new FBXLoader(this.loadingManager);
     this.loadPistol(fbxLoader);
+    this.loadRifle(fbxLoader);
   };
 
   private loadScene(loader: GLTFLoader) {
@@ -47,6 +49,14 @@ export class ModelLoader {
     loader.load(pistolUrl, (group) => {
       this.scaleSyntyModel(group);
       this.pistol = group;
+    });
+  }
+
+  private loadRifle(loader: FBXLoader) {
+    const url = new URL("/models/rifle.fbx", import.meta.url).href;
+    loader.load(url, (group) => {
+      this.scaleSyntyModel(group);
+      this.rifle = group;
     });
   }
 

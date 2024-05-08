@@ -221,22 +221,28 @@ export class GameState {
     // First clear any outlines
     this.renderPipeline.clearOutlines();
 
+    // Are we looking at a table gun?
+    const gun = this.getLookedAtTableGun();
+    if (gun) {
+      this.renderPipeline.outlineObject(gun.object);
+      this.lowerEquippedGun();
+    } else {
+      this.stopLoweringEquippedGun();
+    }
+  };
+
+  private getLookedAtTableGun(): Gun | undefined {
     this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
 
-    // Are we looking at a table gun?
     for (const gun of this.tableGuns) {
       const intersections = this.raycaster.intersectObject(gun.object, true);
       if (intersections.length) {
-        this.renderPipeline.outlineObject(gun.object);
-        this.lowerEquippedGun();
-
-        return;
+        return gun;
       }
     }
 
-    // Not looking at any table guns we can't shoot
-    this.stopLoweringEquippedGun();
-  };
+    return undefined;
+  }
 
   private lowerEquippedGun() {
     // Cannot lower what is not equipped
@@ -348,6 +354,12 @@ export class GameState {
     // This gun is now equipped
     gun.enable();
     this.equippedGun = gun;
+
+    // In case we're now looking at an interactive item and camera stops...
+    const lookingAt = this.getLookedAtTableGun();
+    if (lookingAt) {
+      this.lowerEquippedGun();
+    }
   }
 
   private async unequipGun(gun: Gun) {

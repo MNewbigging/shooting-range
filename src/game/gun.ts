@@ -27,7 +27,7 @@ export type FiringModeName = "semi-auto" | "auto" | "burst";
  * - being unequipped (hides itself animation)
  */
 export class Gun {
-  equipped = false;
+  enabled = false;
 
   private raycaster = new THREE.Raycaster();
 
@@ -44,6 +44,7 @@ export class Gun {
   constructor(
     public object: THREE.Object3D,
     public holdPosition: THREE.Vector3,
+    public lowerValues: THREE.Vector2, // x = rot, y = pos relative to hold pos
     private gameLoader: GameLoader,
     private mouseListener: MouseListener,
     private keyboardListener: KeyboardListener,
@@ -61,7 +62,7 @@ export class Gun {
     this.reloadAction = this.setupReloadAnim();
   }
 
-  equip() {
+  enable() {
     // Re-create idle animation for this position then start it
     this.idleAnim = this.setupIdleAnim();
     this.idleAnim.start();
@@ -70,10 +71,10 @@ export class Gun {
     this.firingMode.enable();
     this.keyboardListener.on("r", this.onPressR);
 
-    this.equipped = true;
+    this.enabled = true;
   }
 
-  unequip() {
+  disable() {
     // Stop any active animations
     this.idleAnim.stop();
     this.reloadAction?.stop().reset();
@@ -82,7 +83,7 @@ export class Gun {
     this.firingMode.disable();
     this.keyboardListener.off("r", this.onPressR);
 
-    this.equipped = false;
+    this.enabled = false;
   }
 
   setFiringMode(mode: FiringModeName) {
@@ -91,7 +92,7 @@ export class Gun {
   }
 
   update(dt: number) {
-    if (!this.equipped) {
+    if (!this.enabled) {
       return;
     }
 

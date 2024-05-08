@@ -10,6 +10,7 @@ import { RenderPipeline } from "./render-pipeline";
 import { TextureLoader } from "../loaders/texture-loader";
 import { TargetManager } from "./target-manager";
 import { Gun } from "./gun";
+import { TweenFactory, tilAnimEnd } from "./tween-factory";
 
 /**
  * TODO:
@@ -20,6 +21,15 @@ import { Gun } from "./gun";
  * -- Pick up / interact
  * -- Shoot (shouldn't shoot things you interact with)
  */
+
+// Keeping track of common properties/functions of held items
+interface Item {
+  update(dt: number): void;
+  equip(): void;
+  unequip(): void;
+  lower(): void;
+  lowered: boolean; // either lowered or not
+}
 
 export class GameState {
   @observable paused = false;
@@ -39,6 +49,9 @@ export class GameState {
   private tableGuns: Gun[] = []; // in the world
   private heldGuns: Gun[] = []; // on the player
   private equippedGun?: Gun; // in player's hands
+  private lowerEquipped = false;
+  private lowerAnim?: TWEEN.Tween<any>;
+  private raiseAnim?: TWEEN.Tween<any>;
 
   constructor(private gameLoader: GameLoader) {
     makeAutoObservable(this);
@@ -139,6 +152,7 @@ export class GameState {
     const pistolGun = new Gun(
       pistol,
       new THREE.Vector3(0.15, -0.2, -0.5),
+      new THREE.Vector2(-Math.PI / 4, -0.2),
       this.gameLoader,
       this.mouseListener,
       this.keyboardListener,
@@ -169,6 +183,7 @@ export class GameState {
     const rifleGun = new Gun(
       rifle,
       new THREE.Vector3(0.15, -0.2, -0.3),
+      new THREE.Vector2(-Math.PI / 4.5, -0.15),
       this.gameLoader,
       this.mouseListener,
       this.keyboardListener,
@@ -214,10 +229,65 @@ export class GameState {
       const intersections = this.raycaster.intersectObject(gun.object, true);
       if (intersections.length) {
         this.renderPipeline.outlineObject(gun.object);
-        break;
+        this.lowerEquippedGun();
+
+        return;
       }
     }
+
+    // Not looking at any table guns we can't shoot
+    this.stopLoweringEquippedGun();
   };
+
+  private lowerEquippedGun() {
+    // If we're already lowered, can stop
+    if (this.lowerEquipped) {
+      return;
+    }
+
+    this.lowerEquipped = true;
+
+    // If raising, stop
+    this.raiseAnim?.stop();
+    this.raiseAnim = undefined;
+
+    // Is the lower animation already underway?
+    if (!this.lowerAnim && this.equippedGun) {
+      // Create it
+      this.lowerAnim = TweenFactory.lowerGun(this.equippedGun);
+      this.lowerAnim.onComplete(() => {
+        this.lowerAnim = undefined;
+      });
+      this.lowerAnim.onStart(() => console.log("lowering"));
+
+      // Disable gun for now
+      this.equippedGun.disable();
+      this.lowerAnim.start();
+    }
+  }
+
+  private stopLoweringEquippedGun() {
+    if (!this.lowerEquipped) {
+      return;
+    }
+
+    this.lowerEquipped = false;
+
+    // If still lowering, stop
+    this.lowerAnim?.stop();
+    this.lowerAnim = undefined;
+
+    // If there is a gun to raise, raise it
+    if (!this.raiseAnim && this.equippedGun) {
+      this.raiseAnim = TweenFactory.raiseGun(this.equippedGun);
+      this.raiseAnim.onComplete(() => {
+        this.raiseAnim = undefined;
+        this.equippedGun?.enable();
+      });
+      this.raiseAnim.onStart(() => console.log("raising"));
+      this.raiseAnim.start();
+    }
+  }
 
   private onMouseDown = () => {
     // Check for left click
@@ -238,45 +308,33 @@ export class GameState {
     }
   };
 
-  private pickupGun(gun: Gun) {
+  private async pickupGun(gun: Gun) {
     // Begin the pickup animation - move to just below camera
     const targetPos = this.camera.position.clone();
-    targetPos.y = gun.object.position.y;
 
-    new TWEEN.Tween(gun.object.position)
-      .to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 250)
-      .easing(TWEEN.Easing.Quadratic.In)
-      .start()
-      .onComplete(() => {
-        // Remove from table guns
-        this.tableGuns = this.tableGuns.filter((g) => g.object !== gun.object);
+    await tilAnimEnd(TweenFactory.pickupGun(gun, targetPos));
 
-        // Add to held guns
-        this.heldGuns.push(gun);
+    // Remove from table guns
+    this.tableGuns = this.tableGuns.filter((g) => g.object !== gun.object);
 
-        // Reset any rotation so it faces the right way
-        gun.object.rotation.set(0, Math.PI, 0);
+    // Add to held guns
+    this.heldGuns.push(gun);
 
-        // Hide it until ready to show
-        gun.object.visible = false;
+    // Reset any rotation so it faces the right way
+    gun.object.rotation.set(0, Math.PI, 0);
 
-        // Equip straight away
-        this.equipGun(gun);
-      });
-  }
+    // Hide it until ready to show
+    gun.object.visible = false;
 
-  private unequipGun(gun: Gun): Promise<void> {
-    return new Promise<void>((resolve) => {
-      gun.unequip();
-      const hideAnim = this.getHideGunAnim(gun);
-      hideAnim.start().onComplete(() => resolve());
-    });
+    // Equip straight away
+    this.equipGun(gun);
   }
 
   private async equipGun(gun: Gun) {
     // Unequip then hide the current gun
     if (this.equippedGun) {
-      await this.unequipGun(this.equippedGun);
+      this.equippedGun.disable();
+      await tilAnimEnd(TweenFactory.hideGun(gun));
       this.camera.remove(this.equippedGun.object);
     }
 
@@ -288,39 +346,10 @@ export class GameState {
     gun.object.rotation.x = -Math.PI;
 
     // Start the show animation
-    const showAnim = this.getShowGunAnim(gun);
-    showAnim.start().onComplete(() => {
-      gun.equip();
-      this.equippedGun = gun;
-    });
-  }
+    await tilAnimEnd(TweenFactory.showGun(gun));
 
-  private getShowGunAnim(gun: Gun) {
-    const target = gun.holdPosition.clone();
-    const startRotX = gun.object.rotation.x;
-
-    // Animate from current off-screen pos into holding position
-    return new TWEEN.Tween(gun.object)
-      .to(
-        {
-          position: { x: target.x, y: target.y, z: target.z },
-          rotation: { x: startRotX + Math.PI },
-        },
-        250
-      )
-      .easing(TWEEN.Easing.Back.Out)
-      .onStart(() => (gun.object.visible = true));
-  }
-
-  private getHideGunAnim(gun: Gun) {
-    return new TWEEN.Tween(gun.object)
-      .to(
-        {
-          position: { y: -1 },
-          rotation: { x: -Math.PI },
-        },
-        250
-      )
-      .easing(TWEEN.Easing.Quadratic.In);
+    // This gun is now equipped
+    gun.enable();
+    this.equippedGun = gun;
   }
 }

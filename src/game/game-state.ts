@@ -322,6 +322,11 @@ export class GameState {
     // Add to held guns
     this.heldGuns.push(gun);
 
+    // Assign hotkey
+    const index = this.heldGuns.length - 1;
+    const key = `${this.heldGuns.length}`;
+    this.keyboardListener.on(key, () => this.onGunHotkey(index));
+
     // Reset any rotation so it faces the right way
     gun.object.rotation.set(0, Math.PI, 0);
 
@@ -368,7 +373,22 @@ export class GameState {
     this.camera.remove(gun.object);
   }
 
-  private onHotkeyPress = () => {
-    //
-  };
+  private onGunHotkey(index: number) {
+    // Is there a gun for that index?
+    if (this.heldGuns.length <= index) {
+      console.log("not holding gun there");
+      return;
+    }
+
+    const gun = this.heldGuns[index];
+
+    // Are we already holding it?
+    if (this.equippedGun?.id === gun.id) {
+      console.log("already holding it");
+      return;
+    }
+
+    // Swap to that gun so long as we're not currently swapping...
+    this.equipGun(gun);
+  }
 }

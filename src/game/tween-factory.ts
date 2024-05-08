@@ -54,7 +54,7 @@ export class TweenFactory {
         position: { y: targetPos },
         rotation: { x: targetRot },
       },
-      300
+      250
     );
   }
 
@@ -64,7 +64,7 @@ export class TweenFactory {
         position: { y: gun.holdPosition.y },
         rotation: { x: 0 },
       },
-      300
+      250
     );
   }
 }

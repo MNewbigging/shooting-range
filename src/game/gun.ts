@@ -6,6 +6,7 @@ import { MouseListener } from "../listeners/mouse-listener";
 import { TextureLoader } from "../loaders/texture-loader";
 import { EventListener } from "../listeners/event-listener";
 import { KeyboardListener } from "../listeners/keyboard-listener";
+import { randomId } from "../utils/utils";
 
 export interface GunProps {
   object: THREE.Object3D;
@@ -28,6 +29,7 @@ export type FiringModeName = "semi-auto" | "auto" | "burst";
  */
 export class Gun {
   enabled = false;
+  readonly id = randomId();
 
   private raycaster = new THREE.Raycaster();
 

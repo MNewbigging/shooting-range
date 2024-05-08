@@ -49,7 +49,6 @@ export class GameState {
   private tableGuns: Gun[] = []; // in the world
   private heldGuns: Gun[] = []; // on the player
   private equippedGun?: Gun; // in player's hands
-  private lowerEquipped = false;
   private lowerAnim?: TWEEN.Tween<any>;
   private raiseAnim?: TWEEN.Tween<any>;
 
@@ -240,54 +239,51 @@ export class GameState {
   };
 
   private lowerEquippedGun() {
-    // If we're already lowered, can stop
-    if (this.lowerEquipped) {
+    // Cannot lower what is not equipped
+    if (!this.equippedGun) {
       return;
     }
 
-    this.lowerEquipped = true;
+    // Currently lowering
+    if (this.lowerAnim) {
+      return;
+    }
 
     // If raising, stop
     this.raiseAnim?.stop();
     this.raiseAnim = undefined;
 
-    // Is the lower animation already underway?
-    if (!this.lowerAnim && this.equippedGun) {
-      // Create it
-      this.lowerAnim = TweenFactory.lowerGun(this.equippedGun);
-
-      this.lowerAnim.onComplete(() => {
-        this.lowerAnim = undefined;
-      });
-
-      // Disable gun for now
-      this.equippedGun.disable();
-      this.lowerAnim.start();
-    }
+    // Lower the equipped gun
+    this.lowerAnim = TweenFactory.lowerGun(this.equippedGun);
+    this.lowerAnim.onComplete(() => {
+      this.lowerAnim = undefined;
+    });
+    this.equippedGun.disable();
+    this.lowerAnim.start();
   }
 
   private stopLoweringEquippedGun() {
-    if (!this.lowerEquipped) {
+    // Cannot raise what isn't lowered
+    if (!this.equippedGun) {
       return;
     }
 
-    this.lowerEquipped = false;
+    // Currently raising
+    if (this.raiseAnim) {
+      return;
+    }
 
     // If still lowering, stop
     this.lowerAnim?.stop();
     this.lowerAnim = undefined;
 
-    // If there is a gun to raise, raise it
-    if (!this.raiseAnim && this.equippedGun) {
-      this.raiseAnim = TweenFactory.raiseGun(this.equippedGun);
-
-      this.raiseAnim.onComplete(() => {
-        this.raiseAnim = undefined;
-        this.equippedGun?.enable();
-      });
-
-      this.raiseAnim.start();
-    }
+    // Raise the equipped gun
+    this.raiseAnim = TweenFactory.raiseGun(this.equippedGun);
+    this.raiseAnim.onComplete(() => {
+      this.raiseAnim = undefined;
+      this.equippedGun?.enable();
+    });
+    this.raiseAnim.start();
   }
 
   private onMouseDown = () => {
@@ -312,7 +308,6 @@ export class GameState {
   private async pickupGun(gun: Gun) {
     // Begin the pickup animation - move to just below camera
     const targetPos = this.camera.position.clone();
-
     await tilAnimEnd(TweenFactory.pickupGun(gun, targetPos));
 
     // Remove from table guns
@@ -344,6 +339,9 @@ export class GameState {
     gun.object.position.set(gun.holdPosition.x, -1, gun.holdPosition.z);
     gun.object.rotation.x = -Math.PI;
 
+    // Ensure the gun is visible
+    gun.object.visible = true;
+
     // Start the show animation
     await tilAnimEnd(TweenFactory.showGun(gun));
 
@@ -357,4 +355,8 @@ export class GameState {
     await tilAnimEnd(TweenFactory.hideGun(gun));
     this.camera.remove(gun.object);
   }
+
+  private onHotkeyPress = () => {
+    //
+  };
 }

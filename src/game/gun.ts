@@ -62,7 +62,10 @@ export class Gun {
   }
 
   enable() {
-    console.log("enabling, is enabled now", this.enabled);
+    if (this.enabled) {
+      return;
+    }
+
     // Re-create idle animation for this position then start it
     this.idleAnim = this.setupIdleAnim();
     this.idleAnim.start();
@@ -75,7 +78,10 @@ export class Gun {
   }
 
   disable() {
-    console.log("disabling, is disabled now", this.enabled);
+    if (!this.enabled) {
+      return;
+    }
+
     // Stop any active animations
     this.idleAnim.stop();
     this.reloadAction?.stop().reset();

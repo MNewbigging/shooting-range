@@ -30,8 +30,7 @@ export class TweenFactory {
         },
         250
       )
-      .easing(TWEEN.Easing.Back.Out)
-      .onStart(() => (gun.object.visible = true));
+      .easing(TWEEN.Easing.Back.Out);
   }
 
   static hideGun(gun: Gun) {

@@ -255,10 +255,10 @@ export class GameState {
     if (!this.lowerAnim && this.equippedGun) {
       // Create it
       this.lowerAnim = TweenFactory.lowerGun(this.equippedGun);
+
       this.lowerAnim.onComplete(() => {
         this.lowerAnim = undefined;
       });
-      this.lowerAnim.onStart(() => console.log("lowering"));
 
       // Disable gun for now
       this.equippedGun.disable();
@@ -280,11 +280,12 @@ export class GameState {
     // If there is a gun to raise, raise it
     if (!this.raiseAnim && this.equippedGun) {
       this.raiseAnim = TweenFactory.raiseGun(this.equippedGun);
+
       this.raiseAnim.onComplete(() => {
         this.raiseAnim = undefined;
         this.equippedGun?.enable();
       });
-      this.raiseAnim.onStart(() => console.log("raising"));
+
       this.raiseAnim.start();
     }
   }
@@ -333,9 +334,7 @@ export class GameState {
   private async equipGun(gun: Gun) {
     // Unequip then hide the current gun
     if (this.equippedGun) {
-      this.equippedGun.disable();
-      await tilAnimEnd(TweenFactory.hideGun(gun));
-      this.camera.remove(this.equippedGun.object);
+      await this.unequipGun(this.equippedGun);
     }
 
     // Add new gun to the camera straight away
@@ -351,5 +350,11 @@ export class GameState {
     // This gun is now equipped
     gun.enable();
     this.equippedGun = gun;
+  }
+
+  private async unequipGun(gun: Gun) {
+    gun.disable();
+    await tilAnimEnd(TweenFactory.hideGun(gun));
+    this.camera.remove(gun.object);
   }
 }

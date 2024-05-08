@@ -51,7 +51,6 @@ export class Gun {
     private events: EventListener,
     private scene: THREE.Scene,
     private camera: THREE.PerspectiveCamera,
-
     private firingModeName: FiringModeName,
     private rpm: number
   ) {
@@ -63,6 +62,7 @@ export class Gun {
   }
 
   enable() {
+    console.log("enabling, is enabled now", this.enabled);
     // Re-create idle animation for this position then start it
     this.idleAnim = this.setupIdleAnim();
     this.idleAnim.start();
@@ -75,6 +75,7 @@ export class Gun {
   }
 
   disable() {
+    console.log("disabling, is disabled now", this.enabled);
     // Stop any active animations
     this.idleAnim.stop();
     this.reloadAction?.stop().reset();

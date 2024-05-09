@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import * as TWEEN from "@tweenjs/tween.js";
-import { Gun } from "./gun";
+import { Gun } from "./guns/gun";
 
 export function tilAnimEnd(tween: TWEEN.Tween<any>): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -9,7 +9,6 @@ export function tilAnimEnd(tween: TWEEN.Tween<any>): Promise<void> {
 }
 
 type UnknownProps = Record<string, any>;
-
 export class ChainedTween {
   // Assumes an ordered array of tweens to chain of length 2+
   constructor(private tweens: TWEEN.Tween<UnknownProps>[], loop = false) {

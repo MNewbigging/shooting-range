@@ -9,31 +9,14 @@ import { EventListener } from "../listeners/event-listener";
 import { RenderPipeline } from "./render-pipeline";
 import { TextureLoader } from "../loaders/texture-loader";
 import { TargetManager } from "./target-manager";
-import { Gun } from "./gun";
+import { Gun } from "./guns/gun";
 import { TweenFactory, tilAnimEnd } from "./tween-factory";
-
-/**
- * TODO:
- * - Move all of first scene into game state
- * - Then have the render pipeline create the renderer
- *
- * - Click callback priority/order:
- * -- Pick up / interact
- * -- Shoot (shouldn't shoot things you interact with)
- */
-
-// Keeping track of common properties/functions of held items
-interface Item {
-  update(dt: number): void;
-  equip(): void;
-  unequip(): void;
-  lower(): void;
-  lowered: boolean; // either lowered or not
-}
+import { GameFactory } from "./game-factory";
 
 export class GameState {
   @observable paused = false;
 
+  // High-level threejs stuff
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private renderPipeline: RenderPipeline;
@@ -41,10 +24,15 @@ export class GameState {
   private controls: PointerLockControls;
   private raycaster = new THREE.Raycaster();
 
+  // Listeners
   private mouseListener: MouseListener;
   private keyboardListener: KeyboardListener;
   private events: EventListener;
 
+  // Constants
+  private bulletDecalMaterial: THREE.MeshPhongMaterial;
+
+  // Game
   private targetManager: TargetManager;
   private tableGuns: Gun[] = []; // in the world
   private heldGuns: Gun[] = []; // on the player
@@ -70,6 +58,11 @@ export class GameState {
     // Handle pointer lock events
     document.addEventListener("pointerlockchange", this.onPointerLockChange);
     document.addEventListener("pointerlockerror", this.onPointerLockError);
+
+    // Constants
+    this.bulletDecalMaterial = GameFactory.getBulletDecalMaterial(
+      this.gameLoader.textureLoader
+    );
 
     // Setup game scene
     this.scene.background = new THREE.Color("#1680AF");
@@ -152,7 +145,7 @@ export class GameState {
       pistol,
       new THREE.Vector3(0.15, -0.2, -0.5),
       new THREE.Vector2(-Math.PI / 4, -0.2),
-      this.gameLoader,
+      this.bulletDecalMaterial,
       this.mouseListener,
       this.keyboardListener,
       this.events,
@@ -183,7 +176,7 @@ export class GameState {
       rifle,
       new THREE.Vector3(0.15, -0.2, -0.3),
       new THREE.Vector2(-Math.PI / 4.5, -0.15),
-      this.gameLoader,
+      this.bulletDecalMaterial,
       this.mouseListener,
       this.keyboardListener,
       this.events,

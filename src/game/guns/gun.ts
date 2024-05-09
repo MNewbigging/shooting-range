@@ -1,18 +1,22 @@
 import * as THREE from "three";
 import * as TWEEN from "@tweenjs/tween.js";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry";
-import { GameLoader } from "../loaders/game-loader";
-import { MouseListener } from "../listeners/mouse-listener";
-import { TextureLoader } from "../loaders/texture-loader";
-import { EventListener } from "../listeners/event-listener";
-import { KeyboardListener } from "../listeners/keyboard-listener";
-import { randomId } from "../utils/utils";
-import { ChainedTween, TweenFactory } from "./tween-factory";
+import { GameLoader } from "../../loaders/game-loader";
+import { MouseListener } from "../../listeners/mouse-listener";
+import { TextureLoader } from "../../loaders/texture-loader";
+import { EventListener } from "../../listeners/event-listener";
+import { KeyboardListener } from "../../listeners/keyboard-listener";
+import { randomId } from "../../utils/utils";
+import { ChainedTween, TweenFactory } from "../tween-factory";
 
 export interface GunProps {
   object: THREE.Object3D;
   firingModeName: FiringModeName;
   rpm: number;
+  bulletDecalMaterial: THREE.MeshPhongMaterial;
+  holdPosition: THREE.Vector3;
+  lowerPositionMod: THREE.Vector3;
+  lowerRotationMod: THREE.Vector3;
 }
 
 export type FiringModeName = "semi-auto" | "auto" | "burst";
@@ -38,7 +42,6 @@ export class Gun {
 
   private firingMode: FiringMode;
 
-  private bulletDecalMaterial: THREE.MeshBasicMaterial;
   private decalHelper = new THREE.Object3D();
   private decalSize = new THREE.Vector3(0.1, 0.1, 0.1);
 
@@ -50,7 +53,7 @@ export class Gun {
     public object: THREE.Object3D,
     public holdPosition: THREE.Vector3,
     public lowerValues: THREE.Vector2, // x = rot, y = pos relative to hold pos
-    private gameLoader: GameLoader,
+    private bulletDecalMaterial: THREE.MeshPhongMaterial,
     private mouseListener: MouseListener,
     private keyboardListener: KeyboardListener,
     private events: EventListener,
@@ -60,7 +63,6 @@ export class Gun {
     private rpm: number
   ) {
     this.firingMode = this.getFiringMode(firingModeName);
-    this.bulletDecalMaterial = this.setupBulletDecalMaterial();
     this.mixer = new THREE.AnimationMixer(this.object);
     this.reloadAction = this.setupReloadAnim();
     this.idleAnim = TweenFactory.idleGun(this);
@@ -113,21 +115,6 @@ export class Gun {
 
     this.firingMode.update(dt);
     this.mixer.update(dt);
-  }
-
-  private setupBulletDecalMaterial() {
-    const decal = this.gameLoader.textureLoader.get("bullet-hole");
-
-    const material = new THREE.MeshPhongMaterial({
-      map: decal,
-      transparent: true,
-      depthTest: true,
-      depthWrite: false,
-      polygonOffset: true,
-      polygonOffsetFactor: -4,
-    });
-
-    return material;
   }
 
   private setupReloadAnim() {

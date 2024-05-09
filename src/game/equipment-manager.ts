@@ -6,6 +6,7 @@ import { KeyboardListener } from "../listeners/keyboard-listener";
 import { MouseListener } from "../listeners/mouse-listener";
 import { GameLoader } from "../loaders/game-loader";
 import { EventListener } from "../listeners/event-listener";
+import { makeAutoObservable, observable } from "mobx";
 
 export class EquipmentManager {
   private raycaster = new THREE.Raycaster();
@@ -13,7 +14,7 @@ export class EquipmentManager {
 
   private tableGuns: Gun[] = []; // in the world
   private heldGuns: Gun[] = []; // on the player
-  private equippedGun?: Gun; // in player's hands
+  @observable equippedGun?: Gun; // in player's hands
   private equipping = false;
   private lowerAnim?: TWEEN.Tween<any>;
   private raiseAnim?: TWEEN.Tween<any>;
@@ -26,6 +27,8 @@ export class EquipmentManager {
     private mouseListener: MouseListener,
     private events: EventListener
   ) {
+    makeAutoObservable(this);
+
     this.bulletDecalMaterial = this.setupBulletDecalMaterial();
 
     this.mouseListener.addListener("mousedown", this.onMouseDown);
@@ -279,6 +282,7 @@ export class EquipmentManager {
       object: pistol,
       firingModeName: "semi-auto",
       rpm: 180,
+      magSize: 2,
       bulletDecalMaterial: this.bulletDecalMaterial,
       holdPosition: new THREE.Vector3(0.15, -0.2, -0.5),
       lowerPosMod: new THREE.Vector3(0, -0.2, 0),
@@ -314,6 +318,7 @@ export class EquipmentManager {
       object: rifle,
       firingModeName: "auto",
       rpm: 480,
+      magSize: 10,
       bulletDecalMaterial: this.bulletDecalMaterial,
       holdPosition: new THREE.Vector3(0.1, -0.15, -0.23),
       lowerPosMod: new THREE.Vector3(0, -0.15, 0),

@@ -11,11 +11,13 @@ import {
   AutomaticFiringMode,
   SemiAutoFiringMode,
 } from "./firing-modes";
+import { makeAutoObservable, observable } from "mobx";
 
 export interface GunProps {
   object: THREE.Object3D;
   firingModeName: FiringModeName;
   rpm: number;
+  magSize: number;
   bulletDecalMaterial: THREE.MeshPhongMaterial;
   holdPosition: THREE.Vector3;
   lowerPosMod: THREE.Vector3;
@@ -28,9 +30,11 @@ export class Gun {
   enabled = false;
   readonly id = randomId();
 
+  // Props
   readonly object: THREE.Object3D;
   readonly rpm: number;
   readonly bulletDecalMaterial: THREE.MeshPhongMaterial;
+  readonly magSize: number;
   holdPosition: THREE.Vector3;
   lowerPosMod: THREE.Vector3;
   lowerRotMod: THREE.Vector3;
@@ -38,6 +42,8 @@ export class Gun {
   recoildRotMod: THREE.Vector3;
 
   private raycaster = new THREE.Raycaster();
+
+  @observable magAmmo: number;
 
   private firingMode: FiringMode;
 
@@ -56,6 +62,8 @@ export class Gun {
     private scene: THREE.Scene,
     private camera: THREE.PerspectiveCamera
   ) {
+    makeAutoObservable(this);
+
     // Pull out readonly props
     this.object = props.object;
     this.holdPosition = props.holdPosition;
@@ -65,6 +73,8 @@ export class Gun {
     this.bulletDecalMaterial = props.bulletDecalMaterial;
     this.recoilPosMod = props.recoilPosMod;
     this.recoildRotMod = props.recoildRotMode;
+    this.magSize = props.magSize;
+    this.magAmmo = this.magSize;
 
     // Setup
     this.firingMode = this.getFiringMode(props.firingModeName);
@@ -161,6 +171,17 @@ export class Gun {
   }
 
   private fire = () => {
+    // Is there a bullet available to fire?
+    if (this.magAmmo <= 0) {
+      // Must reload
+      console.log("need reload");
+      return;
+    }
+
+    // Spend a bullet
+    this.magAmmo--;
+    console.log("mag ammo: ", this.magAmmo);
+
     // Animate
     this.idleAnim.pause();
     const recoilAnim = TweenFactory.recoilGun(this, () =>
@@ -269,5 +290,6 @@ export class Gun {
 
   private onPressR = () => {
     this.reloadAction?.reset().play();
+    this.magAmmo = this.magSize;
   };
 }

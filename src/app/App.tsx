@@ -7,6 +7,7 @@ import { AppState } from "./app-state";
 import { LoadingScreen } from "../loading-screen/loading-screen";
 import { PauseScreen } from "../pause-screen/pause-screen";
 import { Reticle } from "../reticle/reticle";
+import { GameScreen } from "../game-screen/game-screen";
 
 interface AppProps {
   appState: AppState;
@@ -23,7 +24,7 @@ export const App: React.FC<AppProps> = observer(({ appState }) => {
 
       {gameState && gamePaused && <PauseScreen gameState={gameState} />}
 
-      {gameStarted && !gamePaused && <Reticle />}
+      {gameStarted && !gamePaused && <GameScreen gameState={gameState} />}
     </div>
   );
 });

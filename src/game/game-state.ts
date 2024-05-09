@@ -27,7 +27,7 @@ export class GameState {
 
   // Game
   private targetManager: TargetManager;
-  private equipmentManager: EquipmentManager;
+  equipmentManager: EquipmentManager;
 
   constructor(private gameLoader: GameLoader) {
     makeAutoObservable(this);

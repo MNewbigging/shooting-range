@@ -1,9 +1,6 @@
 import * as THREE from "three";
-import * as TWEEN from "@tweenjs/tween.js";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry";
-import { GameLoader } from "../../loaders/game-loader";
 import { MouseListener } from "../../listeners/mouse-listener";
-import { TextureLoader } from "../../loaders/texture-loader";
 import { EventListener } from "../../listeners/event-listener";
 import { KeyboardListener } from "../../listeners/keyboard-listener";
 import { randomId } from "../../utils/utils";
@@ -21,20 +18,17 @@ export interface GunProps {
 
 export type FiringModeName = "semi-auto" | "auto" | "burst";
 
-/**
- * A gun is an item
- * It can exist without being equipped
- *
- * States:
- * - lying somewhere in the world
- * - being picked up (moves towards player for a second)
- * - being equipped (shows itself animation)
- * - equipped (idle/fire/reload animations)
- * - being unequipped (hides itself animation)
- */
 export class Gun {
   enabled = false;
   readonly id = randomId();
+
+  // From props object, for convenience
+  readonly object: THREE.Object3D;
+  readonly rpm: number;
+  readonly bulletDecalMaterial: THREE.MeshPhongMaterial;
+  holdPosition: THREE.Vector3;
+  lowerPositionMod: THREE.Vector3;
+  lowerRotationMod: THREE.Vector3;
 
   recoilOffset = new THREE.Vector3(0, 0.02, 0.1);
 
@@ -50,20 +44,24 @@ export class Gun {
   private reloadAction?: THREE.AnimationAction;
 
   constructor(
-    public object: THREE.Object3D,
-    public holdPosition: THREE.Vector3,
-    public lowerValues: THREE.Vector2, // x = rot, y = pos relative to hold pos
-    private bulletDecalMaterial: THREE.MeshPhongMaterial,
+    props: GunProps,
     private mouseListener: MouseListener,
     private keyboardListener: KeyboardListener,
     private events: EventListener,
     private scene: THREE.Scene,
-    private camera: THREE.PerspectiveCamera,
-    private firingModeName: FiringModeName,
-    private rpm: number
+    private camera: THREE.PerspectiveCamera
   ) {
-    this.firingMode = this.getFiringMode(firingModeName);
-    this.mixer = new THREE.AnimationMixer(this.object);
+    // Pull out readonly props
+    this.object = props.object;
+    this.holdPosition = props.holdPosition;
+    this.lowerPositionMod = props.lowerPositionMod;
+    this.lowerRotationMod = props.lowerRotationMod;
+    this.rpm = props.rpm;
+    this.bulletDecalMaterial = props.bulletDecalMaterial;
+
+    // Setup
+    this.firingMode = this.getFiringMode(props.firingModeName);
+    this.mixer = new THREE.AnimationMixer(props.object);
     this.reloadAction = this.setupReloadAnim();
     this.idleAnim = TweenFactory.idleGun(this);
   }

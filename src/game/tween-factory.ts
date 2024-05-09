@@ -94,8 +94,8 @@ export class TweenFactory {
   }
 
   static lowerGun(gun: Gun) {
-    const targetRot = gun.lowerValues.x;
-    const targetPos = gun.holdPosition.y + gun.lowerValues.y;
+    const targetRot = gun.lowerRotationMod.x;
+    const targetPos = gun.holdPosition.y + gun.lowerPositionMod.y;
 
     return new TWEEN.Tween(gun.object).to(
       {

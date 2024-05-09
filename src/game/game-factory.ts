@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { TextureLoader } from "../loaders/texture-loader";
 import { GameLoader } from "../loaders/game-loader";
-import { FiringModeName, GunProps } from "./guns/gun";
+import { GunProps } from "./guns/gun";
 
 export class GameFactory {
   static getBulletDecalMaterial(textureLoader: TextureLoader) {
@@ -39,7 +39,7 @@ export class GameFactory {
     bulletDecalMaterial: THREE.MeshPhongMaterial
   ): GunProps {
     return {
-      object: gameLoader.modelLoader.pistol,
+      object: gameLoader.modelLoader.rifle,
       firingModeName: "auto",
       rpm: 480,
       bulletDecalMaterial,

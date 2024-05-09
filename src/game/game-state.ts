@@ -141,18 +141,17 @@ export class GameState {
     this.scene.add(pistol);
 
     // Create the gun class for the pistol
+    const pistolProps = GameFactory.getPistolProps(
+      this.gameLoader,
+      this.bulletDecalMaterial
+    );
     const pistolGun = new Gun(
-      pistol,
-      new THREE.Vector3(0.15, -0.2, -0.5),
-      new THREE.Vector2(-Math.PI / 4, -0.2),
-      this.bulletDecalMaterial,
+      pistolProps,
       this.mouseListener,
       this.keyboardListener,
       this.events,
       this.scene,
-      this.camera,
-      "semi-auto",
-      120
+      this.camera
     );
 
     // Add it to the table guns
@@ -172,18 +171,18 @@ export class GameState {
     rifle.rotateZ(Math.PI / 2);
     this.scene.add(rifle);
 
+    const rifleProps = GameFactory.getRifleProps(
+      this.gameLoader,
+      this.bulletDecalMaterial
+    );
+
     const rifleGun = new Gun(
-      rifle,
-      new THREE.Vector3(0.15, -0.2, -0.3),
-      new THREE.Vector2(-Math.PI / 4.5, -0.15),
-      this.bulletDecalMaterial,
+      rifleProps,
       this.mouseListener,
       this.keyboardListener,
       this.events,
       this.scene,
-      this.camera,
-      "auto",
-      480
+      this.camera
     );
 
     this.tableGuns.push(rifleGun);

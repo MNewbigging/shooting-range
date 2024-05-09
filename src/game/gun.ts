@@ -7,6 +7,7 @@ import { TextureLoader } from "../loaders/texture-loader";
 import { EventListener } from "../listeners/event-listener";
 import { KeyboardListener } from "../listeners/keyboard-listener";
 import { randomId } from "../utils/utils";
+import { TweenFactory } from "./tween-factory";
 
 export interface GunProps {
   object: THREE.Object3D;
@@ -30,6 +31,8 @@ export type FiringModeName = "semi-auto" | "auto" | "burst";
 export class Gun {
   enabled = false;
   readonly id = randomId();
+
+  recoilOffset = new THREE.Vector3(0, 0.02, 0.1);
 
   private raycaster = new THREE.Raycaster();
 
@@ -58,9 +61,13 @@ export class Gun {
   ) {
     this.firingMode = this.getFiringMode(firingModeName);
     this.bulletDecalMaterial = this.setupBulletDecalMaterial();
-    this.idleAnim = this.setupIdleAnim();
     this.mixer = new THREE.AnimationMixer(this.object);
     this.reloadAction = this.setupReloadAnim();
+    this.idleAnim = TweenFactory.idleGun(this);
+  }
+
+  get timeBetweenShots() {
+    return this.firingMode.timeBetweenShots;
   }
 
   enable() {
@@ -68,8 +75,7 @@ export class Gun {
       return;
     }
 
-    // Re-create idle animation for this position then start it
-    this.idleAnim = this.setupIdleAnim();
+    // Can start idle animation
     this.idleAnim.start();
 
     // Can now listen for input
@@ -124,21 +130,6 @@ export class Gun {
     return material;
   }
 
-  private setupIdleAnim() {
-    const start = this.object.position.y;
-    const target = this.object.position.y + 0.1;
-    const anim = new TWEEN.Tween(this.object.position).to({ y: target }, 1500);
-    const reverse = new TWEEN.Tween(this.object.position).to(
-      { y: start },
-      1500
-    );
-
-    anim.chain(reverse);
-    reverse.chain(anim);
-
-    return anim;
-  }
-
   private setupReloadAnim() {
     let reloadAction: THREE.AnimationAction | undefined;
     this.object.traverse((child) => {
@@ -150,39 +141,6 @@ export class Gun {
     reloadAction?.setLoop(THREE.LoopOnce, 1);
 
     return reloadAction;
-  }
-
-  private getRecoilAnim() {
-    const startPos = this.object.position.clone();
-    const startRot = this.object.rotation.x;
-
-    const recoilOffset = new THREE.Vector3(0, 0.02, 0.1);
-    const targetPos = new THREE.Vector3()
-      .copy(this.object.position)
-      .add(recoilOffset);
-    const targetRot = this.object.rotation.x + 0.1;
-
-    // Seconds between shots to milliseconds, halved because it needs to return to start pos
-    const maxTime = this.firingMode.timeBetweenShots * 1000 * 0.5;
-    const duration = maxTime * 0.5;
-
-    const anim = new TWEEN.Tween(this.object).to(
-      {
-        position: { y: targetPos.y, z: targetPos.z },
-        rotation: { x: targetRot },
-      },
-      duration
-    );
-    const reverse = new TWEEN.Tween(this.object).to(
-      {
-        position: { y: startPos.y, z: startPos.z },
-        rotation: { x: startRot },
-      },
-      duration
-    );
-    anim.chain(reverse);
-
-    return anim;
   }
 
   private getFiringMode(name: FiringModeName) {
@@ -204,8 +162,12 @@ export class Gun {
   private fire = () => {
     // Animate
     this.idleAnim.pause();
-    const recoilAnim = this.getRecoilAnim();
-    recoilAnim.onComplete(() => this.idleAnim.resume());
+    const recoilAnim = TweenFactory.recoilGun(this, () =>
+      this.idleAnim.resume()
+    );
+    //recoilAnim.onComplete(() => this.idleAnim?.resume());
+    //recoilAnim.onComplete(() => console.log("outer complete"));
+
     recoilAnim.start();
 
     // Was something hit?

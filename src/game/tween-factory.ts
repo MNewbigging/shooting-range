@@ -67,4 +67,51 @@ export class TweenFactory {
       250
     );
   }
+
+  static idleGun(gun: Gun) {
+    const startPos = gun.holdPosition.y;
+    const targetPos = startPos + 0.1;
+
+    const up = new TWEEN.Tween(gun.object.position).to({ y: targetPos }, 1500);
+    const down = new TWEEN.Tween(gun.object.position).to({ y: startPos }, 1500);
+
+    up.chain(down);
+    down.chain(up);
+
+    return up;
+  }
+
+  static recoilGun(gun: Gun, onComplete: () => void) {
+    const startPos = gun.object.position.clone();
+    const startRot = gun.object.rotation.x;
+
+    const targetPos = startPos.clone().add(gun.recoilOffset);
+    const targetRot = startRot + 0.1;
+
+    // Seconds between shots to milliseconds, halved because it needs to return to start pos
+    const maxTime = gun.timeBetweenShots * 1000 * 0.5;
+    const duration = 1000; // maxTime * 0.5;
+
+    const out = new TWEEN.Tween(gun.object).to(
+      {
+        position: { y: targetPos.y, z: targetPos.z },
+        rotation: { x: targetRot },
+      },
+      duration
+    );
+
+    const back = new TWEEN.Tween(gun.object)
+      .to(
+        {
+          position: { y: startPos.y, z: startPos.z },
+          rotation: { x: startRot },
+        },
+        duration
+      )
+      .onComplete(onComplete);
+
+    out.chain(back);
+
+    return out;
+  }
 }

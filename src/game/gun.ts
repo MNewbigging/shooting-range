@@ -126,7 +126,7 @@ export class Gun {
 
   private setupIdleAnim() {
     const start = this.object.position.y;
-    const target = this.object.position.y + 0.01;
+    const target = this.object.position.y + 0.1;
     const anim = new TWEEN.Tween(this.object.position).to({ y: target }, 1500);
     const reverse = new TWEEN.Tween(this.object.position).to(
       { y: start },

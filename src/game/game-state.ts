@@ -259,27 +259,31 @@ export class GameState {
     this.raiseAnim?.stop();
     this.raiseAnim = undefined;
 
+    // Cannot use equipped gun while lowered
+    this.equippedGun.disable();
+
     // Lower the equipped gun
     this.lowerAnim = TweenFactory.lowerGun(this.equippedGun);
-    this.lowerAnim.onComplete(() => {
-      this.lowerAnim = undefined;
-    });
-    this.equippedGun.disable();
     this.lowerAnim.start();
   }
 
   private stopLoweringEquippedGun() {
-    // Cannot raise what isn't lowered
+    // Cannot raise what isn't equipped
     if (!this.equippedGun) {
       return;
     }
 
-    // Currently raising
+    // Cannot raise if we never lowered
+    if (!this.lowerAnim) {
+      return;
+    }
+
+    // Already raising
     if (this.raiseAnim) {
       return;
     }
 
-    // If still lowering, stop
+    // Stop lowering
     this.lowerAnim?.stop();
     this.lowerAnim = undefined;
 

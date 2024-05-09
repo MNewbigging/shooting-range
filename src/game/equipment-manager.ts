@@ -281,8 +281,10 @@ export class EquipmentManager {
       rpm: 120,
       bulletDecalMaterial: this.bulletDecalMaterial,
       holdPosition: new THREE.Vector3(0.15, -0.2, -0.5),
-      lowerPositionMod: new THREE.Vector3(0, -0.2, 0),
-      lowerRotationMod: new THREE.Vector3(-Math.PI / 4, 0, 0),
+      lowerPosMod: new THREE.Vector3(0, -0.2, 0),
+      lowerRotMod: new THREE.Vector3(-Math.PI / 4, 0, 0),
+      recoilPosMod: new THREE.Vector3(0, 0.02, 0.1),
+      recoildRotMode: new THREE.Vector3(0.1, 0, 0),
     };
 
     const pistolGun = new Gun(
@@ -313,9 +315,11 @@ export class EquipmentManager {
       firingModeName: "auto",
       rpm: 480,
       bulletDecalMaterial: this.bulletDecalMaterial,
-      holdPosition: new THREE.Vector3(0.12, -0.15, -0.23),
-      lowerPositionMod: new THREE.Vector3(0, -0.15, 0),
-      lowerRotationMod: new THREE.Vector3(-Math.PI / 4.5, 0, 0),
+      holdPosition: new THREE.Vector3(0.1, -0.15, -0.23),
+      lowerPosMod: new THREE.Vector3(0, -0.15, 0),
+      lowerRotMod: new THREE.Vector3(-Math.PI / 4.5, 0, 0),
+      recoilPosMod: new THREE.Vector3(0, 0, 0.05),
+      recoildRotMode: new THREE.Vector3(0, 0, 0),
     };
 
     const rifleGun = new Gun(

@@ -100,7 +100,7 @@ export class GameState {
     const camera = new THREE.PerspectiveCamera();
     camera.fov = 75;
     camera.far = 500;
-    camera.near = 0.1;
+    camera.near = 0.01;
     camera.position.set(0, 1.7, 1.2);
 
     return camera;

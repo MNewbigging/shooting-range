@@ -18,8 +18,10 @@ export interface GunProps {
   rpm: number;
   bulletDecalMaterial: THREE.MeshPhongMaterial;
   holdPosition: THREE.Vector3;
-  lowerPositionMod: THREE.Vector3;
-  lowerRotationMod: THREE.Vector3;
+  lowerPosMod: THREE.Vector3;
+  lowerRotMod: THREE.Vector3;
+  recoilPosMod: THREE.Vector3;
+  recoildRotMode: THREE.Vector3;
 }
 
 export class Gun {
@@ -30,10 +32,10 @@ export class Gun {
   readonly rpm: number;
   readonly bulletDecalMaterial: THREE.MeshPhongMaterial;
   holdPosition: THREE.Vector3;
-  lowerPositionMod: THREE.Vector3;
-  lowerRotationMod: THREE.Vector3;
-
-  recoilOffset = new THREE.Vector3(0, 0.02, 0.1);
+  lowerPosMod: THREE.Vector3;
+  lowerRotMod: THREE.Vector3;
+  recoilPosMod: THREE.Vector3;
+  recoildRotMod: THREE.Vector3;
 
   private raycaster = new THREE.Raycaster();
 
@@ -57,10 +59,12 @@ export class Gun {
     // Pull out readonly props
     this.object = props.object;
     this.holdPosition = props.holdPosition;
-    this.lowerPositionMod = props.lowerPositionMod;
-    this.lowerRotationMod = props.lowerRotationMod;
+    this.lowerPosMod = props.lowerPosMod;
+    this.lowerRotMod = props.lowerRotMod;
     this.rpm = props.rpm;
     this.bulletDecalMaterial = props.bulletDecalMaterial;
+    this.recoilPosMod = props.recoilPosMod;
+    this.recoildRotMod = props.recoildRotMode;
 
     // Setup
     this.firingMode = this.getFiringMode(props.firingModeName);

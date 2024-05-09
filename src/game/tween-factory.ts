@@ -93,8 +93,8 @@ export class TweenFactory {
   }
 
   static lowerGun(gun: Gun) {
-    const targetRot = gun.lowerRotationMod.x;
-    const targetPos = gun.holdPosition.y + gun.lowerPositionMod.y;
+    const targetRot = gun.lowerRotMod.x;
+    const targetPos = gun.holdPosition.y + gun.lowerPosMod.y;
 
     return new TWEEN.Tween(gun.object).to(
       {
@@ -131,8 +131,8 @@ export class TweenFactory {
     const startPos = gun.object.position.clone();
     const startRot = gun.object.rotation.x;
 
-    const targetPos = startPos.clone().add(gun.recoilOffset);
-    const targetRot = startRot + 0.1;
+    const targetPos = startPos.clone().add(gun.recoilPosMod);
+    const targetRot = startRot + gun.recoildRotMod.x;
 
     // Seconds between shots to milliseconds, halved because it needs to return to start pos
     const maxTime = gun.timeBetweenShots * 1000 * 0.5;

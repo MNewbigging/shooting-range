@@ -1,12 +1,10 @@
 import * as THREE from "three";
 import * as TWEEN from "@tweenjs/tween.js";
-import { Gun } from "./guns/gun";
+import { Gun, GunProps } from "./guns/gun";
 import { TweenFactory, tilAnimEnd } from "./tween-factory";
 import { KeyboardListener } from "../listeners/keyboard-listener";
 import { MouseListener } from "../listeners/mouse-listener";
 import { GameLoader } from "../loaders/game-loader";
-import { TextureLoader } from "../loaders/texture-loader";
-import { GameFactory } from "./game-factory";
 import { EventListener } from "../listeners/event-listener";
 
 export class EquipmentManager {
@@ -28,9 +26,7 @@ export class EquipmentManager {
     private mouseListener: MouseListener,
     private events: EventListener
   ) {
-    this.bulletDecalMaterial = GameFactory.getBulletDecalMaterial(
-      this.gameLoader.textureLoader
-    );
+    this.bulletDecalMaterial = this.setupBulletDecalMaterial();
 
     this.mouseListener.addListener("mousedown", this.onMouseDown);
     this.mouseListener.addListener("wheel", this.onMouseWheel);
@@ -132,8 +128,19 @@ export class EquipmentManager {
     // Hide it until ready to show
     gun.object.visible = false;
 
+    // Adjust size if necessary
+    this.adjustGunSize(gun);
+
     // Equip straight away
     this.equipGun(gun);
+  }
+
+  private adjustGunSize(gun: Gun) {
+    // If this is a large gun, we need to shrink it and move it closer to camera
+    // This should maek it seem the same size, whilst actually being smaller
+    if (gun.object.name === "rifle") {
+      gun.object.scale.multiplyScalar(0.75);
+    }
   }
 
   private async equipGun(gun: Gun) {
@@ -242,14 +249,24 @@ export class EquipmentManager {
     }
   };
 
+  private setupBulletDecalMaterial() {
+    const decal = this.gameLoader.textureLoader.get("bullet-hole");
+
+    const material = new THREE.MeshPhongMaterial({
+      map: decal,
+      transparent: true,
+      depthTest: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+    });
+
+    return material;
+  }
+
   private setupPistol() {
     const pistol = this.gameLoader.modelLoader.pistol;
-
-    // Apply the basic weapon skin to the pistol
-    const texture = this.gameLoader.textureLoader.get("weapon-26");
-    if (texture) {
-      TextureLoader.applyModelTexture(pistol, texture);
-    }
+    this.setupGunMaterial(pistol);
 
     // Place the pistol object on the table
     pistol.position.set(0.8, 1.05, 0.5);
@@ -258,10 +275,16 @@ export class EquipmentManager {
     this.scene.add(pistol);
 
     // Create the gun class for the pistol
-    const pistolProps = GameFactory.getPistolProps(
-      this.gameLoader,
-      this.bulletDecalMaterial
-    );
+    const pistolProps: GunProps = {
+      object: pistol,
+      firingModeName: "semi-auto",
+      rpm: 120,
+      bulletDecalMaterial: this.bulletDecalMaterial,
+      holdPosition: new THREE.Vector3(0.15, -0.2, -0.5),
+      lowerPositionMod: new THREE.Vector3(0, -0.2, 0),
+      lowerRotationMod: new THREE.Vector3(-Math.PI / 4, 0, 0),
+    };
+
     const pistolGun = new Gun(
       pistolProps,
       this.mouseListener,
@@ -278,20 +301,22 @@ export class EquipmentManager {
   private setupRifle() {
     const rifle = this.gameLoader.modelLoader.rifle;
 
-    const texture = this.gameLoader.textureLoader.get("weapon-26");
-    if (texture) {
-      TextureLoader.applyModelTexture(rifle, texture);
-    }
+    this.setupGunMaterial(rifle);
 
     rifle.position.set(0.8, 1.05, 1.2);
     rifle.rotateY(Math.PI - 0.2);
     rifle.rotateZ(Math.PI / 2);
     this.scene.add(rifle);
 
-    const rifleProps = GameFactory.getRifleProps(
-      this.gameLoader,
-      this.bulletDecalMaterial
-    );
+    const rifleProps: GunProps = {
+      object: rifle,
+      firingModeName: "auto",
+      rpm: 480,
+      bulletDecalMaterial: this.bulletDecalMaterial,
+      holdPosition: new THREE.Vector3(0.12, -0.15, -0.23),
+      lowerPositionMod: new THREE.Vector3(0, -0.15, 0),
+      lowerRotationMod: new THREE.Vector3(-Math.PI / 4.5, 0, 0),
+    };
 
     const rifleGun = new Gun(
       rifleProps,
@@ -303,5 +328,20 @@ export class EquipmentManager {
     );
 
     this.tableGuns.push(rifleGun);
+  }
+
+  private setupGunMaterial(gun: THREE.Object3D) {
+    const texture = this.gameLoader.textureLoader.get("weapon-26");
+    if (!texture) {
+      return;
+    }
+
+    gun.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const mat = child.material as THREE.MeshLambertMaterial;
+        mat.map = texture;
+        mat.vertexColors = false;
+      }
+    });
   }
 }

@@ -48,6 +48,7 @@ export class ModelLoader {
     const pistolUrl = new URL("/models/pistol.fbx", import.meta.url).href;
     loader.load(pistolUrl, (group) => {
       this.scaleSyntyModel(group);
+      group.name = "pistol";
       this.pistol = group;
     });
   }
@@ -56,6 +57,7 @@ export class ModelLoader {
     const url = new URL("/models/rifle.fbx", import.meta.url).href;
     loader.load(url, (group) => {
       this.scaleSyntyModel(group);
+      group.name = "rifle";
       this.rifle = group;
     });
   }

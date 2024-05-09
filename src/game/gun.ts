@@ -7,7 +7,7 @@ import { TextureLoader } from "../loaders/texture-loader";
 import { EventListener } from "../listeners/event-listener";
 import { KeyboardListener } from "../listeners/keyboard-listener";
 import { randomId } from "../utils/utils";
-import { TweenFactory } from "./tween-factory";
+import { ChainedTween, TweenFactory } from "./tween-factory";
 
 export interface GunProps {
   object: THREE.Object3D;
@@ -42,7 +42,7 @@ export class Gun {
   private decalHelper = new THREE.Object3D();
   private decalSize = new THREE.Vector3(0.1, 0.1, 0.1);
 
-  private idleAnim: TWEEN.Tween<any>;
+  private idleAnim: ChainedTween;
   private mixer: THREE.AnimationMixer;
   private reloadAction?: THREE.AnimationAction;
 
@@ -165,9 +165,6 @@ export class Gun {
     const recoilAnim = TweenFactory.recoilGun(this, () =>
       this.idleAnim.resume()
     );
-    //recoilAnim.onComplete(() => this.idleAnim?.resume());
-    //recoilAnim.onComplete(() => console.log("outer complete"));
-
     recoilAnim.start();
 
     // Was something hit?

@@ -7,7 +7,6 @@ export function tilAnimEnd(tween: TWEEN.Tween<any>): Promise<void> {
     tween.onComplete(() => resolve()).start();
   });
 }
-
 type UnknownProps = Record<string, any>;
 export class ChainedTween {
   // Assumes an ordered array of tweens to chain of length 2+

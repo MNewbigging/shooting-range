@@ -1,18 +1,11 @@
-export type MouseEventCallback = () => void;
-export type MouseEventType = "mousedown" | "mouseup";
-export enum MouseButton {
-  LEFT,
-  MIDDLE,
-  RIGHT,
-}
+export type MouseEventCallback = (props?: any) => void;
+export type MouseEventType = "mousedown" | "mouseup" | "wheel";
 
 export class MouseListener {
   lmb = false;
-  lastReleasedButton?: MouseButton;
 
   private enabled = false;
-  private pressListeners = new Map<MouseEventType, MouseEventCallback[]>();
-  private releaseListeners = new Map<MouseEventType, MouseEventCallback[]>();
+  private callbacks = new Map<MouseEventType, MouseEventCallback[]>();
 
   constructor() {
     this.enable();
@@ -25,6 +18,7 @@ export class MouseListener {
 
     window.addEventListener("mousedown", this.onMouseDownEvent);
     window.addEventListener("mouseup", this.onMouseUpEvent);
+    window.addEventListener("wheel", this.onMouseWheelEvent);
 
     this.enabled = true;
   }
@@ -36,40 +30,42 @@ export class MouseListener {
 
     window.removeEventListener("mousedown", this.onMouseDownEvent);
     window.removeEventListener("mouseup", this.onMouseUpEvent);
+    window.removeEventListener("wheel", this.onMouseWheelEvent);
 
     this.enabled = false;
   }
 
   addListener(eventType: MouseEventType, callback: MouseEventCallback) {
-    const map =
-      eventType === "mousedown" ? this.pressListeners : this.releaseListeners;
-
-    const existing = map.get(eventType) ?? [];
+    const existing = this.callbacks.get(eventType) ?? [];
     existing.push(callback);
-    map.set(eventType, existing);
+    this.callbacks.set(eventType, existing);
   }
 
   removeListener(eventType: MouseEventType, callback: MouseEventCallback) {
-    const map =
-      eventType === "mousedown" ? this.pressListeners : this.releaseListeners;
-
-    let existing = map.get(eventType);
+    let existing = this.callbacks.get(eventType);
     if (existing?.length) {
       existing = existing.filter((cb) => cb !== callback);
-      map.set(eventType, existing);
+      this.callbacks.set(eventType, existing);
     }
+  }
+
+  private triggerCallbacks(eventType: MouseEventType, props?: any) {
+    this.callbacks.get(eventType)?.forEach((cb) => cb(props));
   }
 
   private onMouseDownEvent = (e: MouseEvent) => {
     this.lmb = e.button === 0;
 
-    this.pressListeners.get("mousedown")?.forEach((cb) => cb());
+    this.triggerCallbacks("mousedown");
   };
 
   private onMouseUpEvent = (e: MouseEvent) => {
     this.lmb = !(e.button === 0);
-    this.lastReleasedButton = e.button;
 
-    this.releaseListeners.get("mouseup")?.forEach((cb) => cb());
+    this.triggerCallbacks("mouseup");
+  };
+
+  private onMouseWheelEvent = (e: WheelEvent) => {
+    this.triggerCallbacks("wheel", e.deltaY);
   };
 }

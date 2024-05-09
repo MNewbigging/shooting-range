@@ -37,6 +37,7 @@ export class GameState {
   private tableGuns: Gun[] = []; // in the world
   private heldGuns: Gun[] = []; // on the player
   private equippedGun?: Gun; // in player's hands
+  private equipping = false;
   private lowerAnim?: TWEEN.Tween<any>;
   private raiseAnim?: TWEEN.Tween<any>;
 
@@ -54,6 +55,7 @@ export class GameState {
     this.events = new EventListener();
 
     this.mouseListener.addListener("mousedown", this.onMouseDown);
+    this.mouseListener.addListener("wheel", this.onMouseWheel);
 
     // Handle pointer lock events
     document.addEventListener("pointerlockchange", this.onPointerLockChange);
@@ -334,6 +336,12 @@ export class GameState {
   }
 
   private async equipGun(gun: Gun) {
+    if (this.equipping) {
+      return;
+    }
+
+    this.equipping = true;
+
     // Unequip then hide the current gun
     if (this.equippedGun) {
       await this.unequipGun(this.equippedGun);
@@ -355,6 +363,7 @@ export class GameState {
     // This gun is now equipped
     gun.enable();
     this.equippedGun = gun;
+    this.equipping = false;
 
     // In case we're now looking at an interactive item and camera stops...
     const lookingAt = this.getLookedAtTableGun();
@@ -387,4 +396,33 @@ export class GameState {
     // Swap to that gun so long as we're not currently swapping...
     this.equipGun(gun);
   }
+
+  private onMouseWheel = (deltaY: number) => {
+    // Up is negative, down is positive
+
+    // If there are no held guns to swap to, can stop
+    if (this.heldGuns.length < 2) {
+      return;
+    }
+
+    // todo - if nothing is equipped, equip first gun
+
+    const equippedIndex = this.heldGuns.findIndex(
+      (gun) => gun.id === this.equippedGun?.id
+    );
+    let nextIndex = equippedIndex;
+
+    // Up
+    if (deltaY < 0) {
+      // Move to next item in array, wrap around
+      nextIndex =
+        equippedIndex - 1 < 0 ? this.heldGuns.length - 1 : equippedIndex - 1;
+    } else {
+      // Down
+      nextIndex =
+        equippedIndex + 1 === this.heldGuns.length ? 0 : equippedIndex + 1;
+    }
+
+    this.equipGun(this.heldGuns[nextIndex]);
+  };
 }

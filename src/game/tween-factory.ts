@@ -134,16 +134,14 @@ export class TweenFactory {
     const targetPos = startPos.clone().add(gun.recoilPosMod);
     const targetRot = startRot + gun.recoildRotMod.x;
 
-    // Seconds between shots to milliseconds, halved because it needs to return to start pos
-    const maxTime = gun.timeBetweenShots * 1000 * 0.5;
-    const duration = maxTime * 0.5;
+    const { outDuration, backDuration } = gun.recoilDurations;
 
     const out = new TWEEN.Tween(gun.object).to(
       {
         position: { y: targetPos.y, z: targetPos.z },
         rotation: { x: targetRot },
       },
-      duration
+      outDuration
     );
 
     const back = new TWEEN.Tween(gun.object)
@@ -152,7 +150,7 @@ export class TweenFactory {
           position: { y: startPos.y, z: startPos.z },
           rotation: { x: startRot },
         },
-        duration
+        backDuration
       )
       .onComplete(onComplete);
 

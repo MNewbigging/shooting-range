@@ -73,8 +73,17 @@ export class Gun {
     this.idleAnim = TweenFactory.idleGun(this);
   }
 
-  get timeBetweenShots() {
-    return this.firingMode.timeBetweenShots;
+  get recoilDurations() {
+    // Given the rpm, this is the most time the entire recoil duration can take
+    const maxTime = this.firingMode.timeBetweenShots * 1000 * 0.9; // error margin
+
+    // It should always be quicker going out than back
+    const outDuration = Math.ceil(maxTime / 4);
+
+    // Reset
+    const backDuration = maxTime - outDuration;
+
+    return { outDuration, backDuration };
   }
 
   enable() {

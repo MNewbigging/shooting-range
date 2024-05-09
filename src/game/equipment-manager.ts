@@ -278,7 +278,7 @@ export class EquipmentManager {
     const pistolProps: GunProps = {
       object: pistol,
       firingModeName: "semi-auto",
-      rpm: 120,
+      rpm: 180,
       bulletDecalMaterial: this.bulletDecalMaterial,
       holdPosition: new THREE.Vector3(0.15, -0.2, -0.5),
       lowerPosMod: new THREE.Vector3(0, -0.2, 0),

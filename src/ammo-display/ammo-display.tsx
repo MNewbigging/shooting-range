@@ -13,5 +13,11 @@ export const AmmoDisplay: React.FC<HudProps> = observer(({ gameState }) => {
     return null;
   }
 
-  return <div className="ammo-display">Ammo {equippedGun.magAmmo}</div>;
+  const ammo = equippedGun.magAmmo;
+
+  return (
+    <div className="ammo-display">
+      Ammo {ammo} {ammo === 0 && <span>RELOAD (r)</span>}{" "}
+    </div>
+  );
 });

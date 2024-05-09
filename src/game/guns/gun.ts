@@ -5,6 +5,12 @@ import { EventListener } from "../../listeners/event-listener";
 import { KeyboardListener } from "../../listeners/keyboard-listener";
 import { randomId } from "../../utils/utils";
 import { ChainedTween, TweenFactory } from "../tween-factory";
+import {
+  FiringModeName,
+  FiringMode,
+  AutomaticFiringMode,
+  SemiAutoFiringMode,
+} from "./firing-modes";
 
 export interface GunProps {
   object: THREE.Object3D;
@@ -16,13 +22,10 @@ export interface GunProps {
   lowerRotationMod: THREE.Vector3;
 }
 
-export type FiringModeName = "semi-auto" | "auto" | "burst";
-
 export class Gun {
   enabled = false;
   readonly id = randomId();
 
-  // From props object, for convenience
   readonly object: THREE.Object3D;
   readonly rpm: number;
   readonly bulletDecalMaterial: THREE.MeshPhongMaterial;
@@ -253,94 +256,5 @@ export class Gun {
 
   private onPressR = () => {
     this.reloadAction?.reset().play();
-  };
-}
-
-// A firing mode doesn't do the firing, just determines WHEN to fire
-abstract class FiringMode {
-  readonly timeBetweenShots: number;
-  protected shotTimer = 0;
-
-  constructor(rpm: number, private readonly fire: () => void) {
-    this.timeBetweenShots = 1 / (rpm / 60);
-  }
-
-  abstract get name(): FiringModeName;
-  abstract enable(): void;
-  abstract disable(): void;
-
-  update(dt: number) {
-    this.shotTimer -= dt;
-  }
-
-  onFire() {
-    this.shotTimer = this.timeBetweenShots;
-    this.fire();
-  }
-}
-
-class AutomaticFiringMode extends FiringMode {
-  constructor(
-    private mouseListener: MouseListener,
-    rpm: number,
-    fire: () => void
-  ) {
-    super(rpm, fire);
-  }
-
-  get name(): FiringModeName {
-    return "auto";
-  }
-
-  override enable(): void {
-    //
-  }
-
-  override disable(): void {
-    //
-  }
-
-  override update(dt: number) {
-    super.update(dt);
-
-    if (this.canFire()) {
-      this.onFire();
-    }
-  }
-
-  private canFire() {
-    return this.mouseListener.lmb && this.shotTimer <= 0;
-  }
-}
-
-class SemiAutoFiringMode extends FiringMode {
-  constructor(
-    private mouseListener: MouseListener,
-    rpm: number,
-    fire: () => void
-  ) {
-    super(rpm, fire);
-  }
-
-  get name(): FiringModeName {
-    return "semi-auto";
-  }
-
-  override enable(): void {
-    this.mouseListener.addListener("mousedown", this.onMouseDown);
-  }
-
-  override disable() {
-    this.mouseListener.removeListener("mousedown", this.onMouseDown);
-  }
-
-  private canFire() {
-    return this.mouseListener.lmb && this.shotTimer <= 0;
-  }
-
-  private onMouseDown = () => {
-    if (this.canFire()) {
-      this.onFire();
-    }
   };
 }

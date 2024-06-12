@@ -52,6 +52,14 @@ export class GameState {
 
     const range = this.gameLoader.modelLoader.shootingRange;
     this.scene.add(range);
+
+    const spawn = range.getObjectByName("Spawn");
+    if (spawn) {
+      this.camera.position.copy(spawn.position);
+      this.camera.position.y = 1.7;
+      console.log("camera pos", this.camera.position);
+    }
+
     this.targetManager = new TargetManager(range, this.events);
 
     this.equipmentManager = new EquipmentManager(
@@ -101,7 +109,6 @@ export class GameState {
     camera.fov = 75;
     camera.far = 500;
     camera.near = 0.01;
-    camera.position.set(0, 1.7, 1.2);
 
     return camera;
   }
@@ -148,17 +155,5 @@ export class GameState {
     } else {
       this.equipmentManager.raiseEquippedItem();
     }
-
-    /**
-     * Slightly odd control above - the mgr has the lookedAtGun, but we need it here
-     * and we're telling mgr how to react to its own knowledge...
-     *
-     * This class needs to know whether to outline something
-     * The mgr needs to know whether to raise or lower an item
-     *
-     * Listening to camera move is better places at this high level, for control
-     *
-     * I could have the mgr provide an event for 'looking at table gun' but it's a bit specific...
-     */
   };
 }

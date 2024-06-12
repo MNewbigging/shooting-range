@@ -272,7 +272,8 @@ export class EquipmentManager {
     this.setupGunMaterial(pistol);
 
     // Place the pistol object on the table
-    pistol.position.set(0.8, 1.05, 0.5);
+    const cameraPos = this.camera.position.clone();
+    pistol.position.copy(cameraPos.add(new THREE.Vector3(1, -0.7, -0.5)));
     pistol.rotateY(Math.PI + 0.5);
     pistol.rotateZ(Math.PI / 2);
     this.scene.add(pistol);
@@ -309,7 +310,9 @@ export class EquipmentManager {
 
     this.setupGunMaterial(rifle);
 
-    rifle.position.set(0.8, 1.05, 1.2);
+    const cameraPos = this.camera.position.clone();
+
+    rifle.position.copy(cameraPos.add(new THREE.Vector3(1, -0.7, 0.5)));
     rifle.rotateY(Math.PI - 0.2);
     rifle.rotateZ(Math.PI / 2);
     this.scene.add(rifle);

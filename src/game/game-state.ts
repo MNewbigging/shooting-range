@@ -57,7 +57,7 @@ export class GameState {
     if (spawn) {
       this.camera.position.copy(spawn.position);
       this.camera.position.y = 1.7;
-      console.log("camera pos", this.camera.position);
+      this.camera.rotateY(-Math.PI / 2);
     }
 
     this.targetManager = new TargetManager(range, this.events);

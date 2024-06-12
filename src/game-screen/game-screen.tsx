@@ -4,6 +4,7 @@ import { GameState } from "../game/game-state";
 import { Reticle } from "../reticle/reticle";
 import "./game-screen.scss";
 import React from "react";
+import { TargetsDisplay } from "../targets-display/targets-display";
 
 interface GameScreenProps {
   gameState: GameState;
@@ -16,6 +17,7 @@ export const GameScreen: React.FC<GameScreenProps> = observer(
         <div className="container">
           <Reticle />
           <AmmoDisplay gameState={gameState} />
+          <TargetsDisplay gameState={gameState} />
         </div>
       </div>
     );

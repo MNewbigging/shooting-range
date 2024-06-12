@@ -19,6 +19,7 @@ export class GameState {
   private renderPipeline: RenderPipeline;
   private clock = new THREE.Clock();
   private controls: PointerLockControls;
+  private raycaster = new THREE.Raycaster();
 
   // Listeners
   private mouseListener: MouseListener;
@@ -26,8 +27,9 @@ export class GameState {
   private events: EventListener;
 
   // Game
-  private targetManager: TargetManager;
+  targetManager: TargetManager;
   equipmentManager: EquipmentManager;
+  generator: THREE.Object3D;
 
   constructor(private gameLoader: GameLoader) {
     makeAutoObservable(this);
@@ -60,6 +62,9 @@ export class GameState {
       this.camera.rotateY(-Math.PI / 2);
     }
 
+    this.generator = range.getObjectByName("Generator") ?? new THREE.Object3D();
+    this.mouseListener.addListener("mousedown", this.onMousedown);
+
     this.targetManager = new TargetManager(range, this.events);
 
     this.equipmentManager = new EquipmentManager(
@@ -68,7 +73,8 @@ export class GameState {
       this.gameLoader,
       this.keyboardListener,
       this.mouseListener,
-      this.events
+      this.events,
+      this.raycaster
     );
     this.equipmentManager.setup();
 
@@ -147,13 +153,30 @@ export class GameState {
     // First clear any outlines for this frame
     this.renderPipeline.clearOutlines();
 
-    // Are we looking at a table gun?
-    const gun = this.equipmentManager.getLookedAtTableGun();
-    if (gun) {
-      this.renderPipeline.outlineObject(gun.object);
+    // Get the object to outline, if any
+    const lookingAtObject = this.isLookingAtGenerator()
+      ? this.generator
+      : this.equipmentManager.getLookedAtTableGun()?.object;
+
+    if (lookingAtObject) {
+      this.renderPipeline.outlineObject(lookingAtObject);
       this.equipmentManager.lowerEquippedItem();
     } else {
       this.equipmentManager.raiseEquippedItem();
+    }
+  };
+
+  private isLookingAtGenerator() {
+    this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
+    const intersections = this.raycaster.intersectObject(this.generator, false);
+    return !!intersections.length;
+  }
+
+  private onMousedown = () => {
+    // If looking at the generator, use it
+    if (this.isLookingAtGenerator()) {
+      console.log("pressed generator");
+      this.targetManager.resetAllTargets();
     }
   };
 }

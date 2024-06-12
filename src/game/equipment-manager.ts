@@ -9,7 +9,6 @@ import { EventListener } from "../listeners/event-listener";
 import { makeAutoObservable, observable } from "mobx";
 
 export class EquipmentManager {
-  private raycaster = new THREE.Raycaster();
   private bulletDecalMaterial: THREE.MeshPhongMaterial;
 
   private tableGuns: Gun[] = []; // in the world
@@ -25,7 +24,8 @@ export class EquipmentManager {
     private gameLoader: GameLoader,
     private keyboardListener: KeyboardListener,
     private mouseListener: MouseListener,
-    private events: EventListener
+    private events: EventListener,
+    private raycaster: THREE.Raycaster
   ) {
     makeAutoObservable(this);
 

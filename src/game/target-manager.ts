@@ -2,6 +2,7 @@ import * as THREE from "three";
 import * as TWEEN from "@tweenjs/tween.js";
 import { getChildIncludesName, randomRange } from "../utils/utils";
 import { EventListener } from "../listeners/event-listener";
+import { action, makeAutoObservable, observable } from "mobx";
 
 interface Target {
   object: THREE.Object3D; // has a parent 'base' and child 'body'
@@ -21,10 +22,14 @@ interface SliderProps {
 }
 
 export class TargetManager {
+  @observable targetsHit = 0;
+  public targetsTotal = 0;
   private targets: Target[] = [];
 
   // Needs to be given the range scene object to extract targets from
   constructor(rangeObject: THREE.Object3D, private events: EventListener) {
+    makeAutoObservable(this);
+
     // Targets should only be a top-level child
     rangeObject.children.forEach((child) => {
       if (child.name.includes("target")) {
@@ -37,20 +42,31 @@ export class TargetManager {
       }
     });
 
+    this.targetsTotal = this.targets.length;
+
     // Listen for
     this.events.on("shot-intersect", this.onShotIntersect);
+  }
+
+  @action resetAllTargets() {
+    this.targets.forEach((target) => {
+      if (target.flipped) {
+        this.flipTargetUpright(target);
+      }
+    });
+    this.targetsHit = 0;
   }
 
   update(dt: number) {
     this.targets.forEach((target) => {
       // If flipped
-      if (target.flipped) {
-        target.flipCooldown -= dt;
+      // if (target.flipped) {
+      //   target.flipCooldown -= dt;
 
-        if (target.flipCooldown < 0) {
-          this.flipTargetUpright(target);
-        }
-      }
+      //   if (target.flipCooldown < 0) {
+      //     this.flipTargetUpright(target);
+      //   }
+      // }
 
       // Move it (no-op for non-sliders)
       this.moveSlider(target, dt);
@@ -136,7 +152,7 @@ export class TargetManager {
     }
   }
 
-  private onShotIntersect = (intersection: THREE.Intersection) => {
+  @action onShotIntersect = (intersection: THREE.Intersection) => {
     // Was a target's body shot?
     const target = this.targets.find(
       (t) => t.body.name === intersection.object.name
@@ -152,12 +168,25 @@ export class TargetManager {
 
     // Flip the target
     target.flipped = true;
-    target.flipCooldown = randomRange(1.5, 5); // flips back randomly
+    //target.flipCooldown = randomRange(1.5, 5); // flips back randomly
+
+    this.targetsHit++;
+
+    const wasLastTarget = this.allTargetsFlipped();
 
     // Animte the flip
     new TWEEN.Tween(target.body.rotation)
       .to({ x: -Math.PI / 2 }, 150)
       .easing(TWEEN.Easing.Quadratic.Out)
+      .onComplete(() => {
+        if (wasLastTarget) {
+          this.resetAllTargets();
+        }
+      })
       .start();
   };
+
+  private allTargetsFlipped() {
+    return this.targets.every((target) => target.flipped);
+  }
 }

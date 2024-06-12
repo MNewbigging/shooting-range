@@ -79,6 +79,7 @@ export class Gun {
     // Setup
     this.firingMode = this.getFiringMode(props.firingModeName);
     this.mixer = new THREE.AnimationMixer(props.object);
+    this.mixer.addEventListener("finished", this.onReloadAnimationEnd);
     this.reloadAction = this.setupReloadAnim();
     this.idleAnim = TweenFactory.idleGun(this);
   }
@@ -171,16 +172,19 @@ export class Gun {
   }
 
   private fire = () => {
+    // Can't fire when reloading
+    if (this.reloadAction?.isRunning()) {
+      return;
+    }
+
     // Is there a bullet available to fire?
     if (this.magAmmo <= 0) {
       // Must reload
-      console.log("need reload");
       return;
     }
 
     // Spend a bullet
     this.magAmmo--;
-    console.log("mag ammo: ", this.magAmmo);
 
     // Animate
     this.idleAnim.pause();
@@ -290,6 +294,10 @@ export class Gun {
 
   private onPressR = () => {
     this.reloadAction?.reset().play();
+  };
+
+  private onReloadAnimationEnd = () => {
+    // Fill magazine!
     this.magAmmo = this.magSize;
   };
 }

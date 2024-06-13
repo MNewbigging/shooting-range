@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 
 export class TextureLoader {
   doneLoading = false;
@@ -23,6 +24,14 @@ export class TextureLoader {
   }
 
   private loadTextures() {
+    const rgbeLoader = new RGBELoader(this.loadingManager);
+    const hdriUrl = new URL("/textures/orchard_cartoony.hdr", import.meta.url)
+      .href;
+    rgbeLoader.load(hdriUrl, (texture) => {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      this.textures.set("hdri", texture);
+    });
+
     const loader = new THREE.TextureLoader(this.loadingManager);
     this.getNameUrlMap().forEach((url, name) => {
       loader.load(url, (texture) => {

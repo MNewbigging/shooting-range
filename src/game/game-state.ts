@@ -49,7 +49,7 @@ export class GameState {
     document.addEventListener("pointerlockerror", this.onPointerLockError);
 
     // Setup game scene
-    this.scene.background = new THREE.Color("#1680AF");
+    //this.scene.background = new THREE.Color("#1680AF");
     this.setupLights();
 
     const range = this.gameLoader.modelLoader.shootingRange;
@@ -83,6 +83,12 @@ export class GameState {
       this.renderPipeline.canvas
     );
     this.controls.addEventListener("change", this.onCameraMove);
+
+    const hdri = this.gameLoader.textureLoader.get("hdri");
+    if (hdri) {
+      this.scene.environment = hdri;
+      this.scene.background = hdri;
+    }
 
     // Start game
     this.update();

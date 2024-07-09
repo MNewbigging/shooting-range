@@ -307,14 +307,22 @@ export class EquipmentManager {
 
     // Setup audio
     const soundMap = new Map<string, THREE.PositionalAudio>();
+    const audioBuffers = this.gameLoader.audioLoader.audioBuffers;
 
-    const shotBuffer =
-      this.gameLoader.audioLoader.audioBuffers.get("pistol-shot");
+    const shotBuffer = audioBuffers.get("pistol-shot");
     if (shotBuffer) {
-      const shotSound = new THREE.PositionalAudio(this.listener);
-      shotSound.setBuffer(shotBuffer);
-      pistol.add(shotSound);
-      soundMap.set("shot", shotSound);
+      const sound = new THREE.PositionalAudio(this.listener);
+      sound.setBuffer(shotBuffer);
+      pistol.add(sound);
+      soundMap.set("shot", sound);
+    }
+
+    const dryTriggerBuffer = audioBuffers.get("pistol-dry-trigger");
+    if (dryTriggerBuffer) {
+      const sound = new THREE.PositionalAudio(this.listener);
+      sound.setBuffer(dryTriggerBuffer);
+      pistol.add(sound);
+      soundMap.set("dry-trigger", sound);
     }
 
     pistolGun.setSoundMap(soundMap);

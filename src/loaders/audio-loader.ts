@@ -28,5 +28,13 @@ export class AudioLoader {
     loader.load(pistolShotUrl, (buffer) =>
       this.audioBuffers.set("pistol-shot", buffer)
     );
+
+    const pistolDryTriggerUrl = new URL(
+      "/audio/45 ACP 1911 Pistol - Dry Trigger 003.wav",
+      import.meta.url
+    ).href;
+    loader.load(pistolDryTriggerUrl, (buffer) =>
+      this.audioBuffers.set("pistol-dry-trigger", buffer)
+    );
   }
 }

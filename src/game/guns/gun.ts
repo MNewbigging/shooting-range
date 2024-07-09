@@ -185,6 +185,7 @@ export class Gun {
 
     // Is there a bullet available to fire?
     if (this.magAmmo <= 0) {
+      this.playAudio("dry-trigger");
       // Must reload
       return;
     }

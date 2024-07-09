@@ -379,6 +379,45 @@ export class EquipmentManager {
     );
 
     this.tableGuns.push(rifleGun);
+
+    // audio
+
+    const soundMap = new Map<string, THREE.PositionalAudio>();
+    const audioBuffers = this.gameLoader.audioLoader.audioBuffers;
+
+    const shotBuffer = audioBuffers.get("rifle-shot");
+    if (shotBuffer) {
+      const sound = new THREE.PositionalAudio(this.listener);
+      sound.setBuffer(shotBuffer);
+      rifle.add(sound);
+      soundMap.set("shot", sound);
+    }
+
+    const dryTriggerBuffer = audioBuffers.get("rifle-dry-trigger");
+    if (dryTriggerBuffer) {
+      const sound = new THREE.PositionalAudio(this.listener);
+      sound.setBuffer(dryTriggerBuffer);
+      rifle.add(sound);
+      soundMap.set("dry-trigger", sound);
+    }
+
+    const magUnloadBuffer = audioBuffers.get("rifle-mag-unload");
+    if (magUnloadBuffer) {
+      const sound = new THREE.PositionalAudio(this.listener);
+      sound.setBuffer(magUnloadBuffer);
+      rifle.add(sound);
+      soundMap.set("unload-mag", sound);
+    }
+
+    const magLoadBuffer = audioBuffers.get("rifle-mag-load");
+    if (magLoadBuffer) {
+      const sound = new THREE.PositionalAudio(this.listener);
+      sound.setBuffer(magLoadBuffer);
+      rifle.add(sound);
+      soundMap.set("load-mag", sound);
+    }
+
+    rifleGun.setSoundMap(soundMap);
   }
 
   private setupGunMaterial(gun: THREE.Object3D) {

@@ -52,5 +52,37 @@ export class AudioLoader {
     loader.load(loadMagSoundUrl, (buffer) =>
       this.audioBuffers.set("load-mag", buffer)
     );
+
+    const rifleShotUrl = new URL(
+      "/audio/5.56 M4 Rifle -  Gunshot A 001.wav",
+      import.meta.url
+    ).href;
+    loader.load(rifleShotUrl, (buffer) =>
+      this.audioBuffers.set("rifle-shot", buffer)
+    );
+
+    const rifleDryTriggerUrl = new URL(
+      "/audio/5.56 M4 Rifle - Dry Trigger 001.wav",
+      import.meta.url
+    ).href;
+    loader.load(rifleDryTriggerUrl, (buffer) =>
+      this.audioBuffers.set("rifle-dry-trigger", buffer)
+    );
+
+    const rifleMagUnloadUrl = new URL(
+      "/audio/5.56 M4 Rifle -  Magazine Unloading 001.wav",
+      import.meta.url
+    ).href;
+    loader.load(rifleMagUnloadUrl, (buffer) =>
+      this.audioBuffers.set("rifle-mag-unload", buffer)
+    );
+
+    const rifleMagLoadUrl = new URL(
+      "/audio/5.56 M4 Rifle -  Magazine Loading 001.wav",
+      import.meta.url
+    ).href;
+    loader.load(rifleMagLoadUrl, (buffer) =>
+      this.audioBuffers.set("rifle-mag-load", buffer)
+    );
   }
 }

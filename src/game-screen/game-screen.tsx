@@ -5,6 +5,7 @@ import { Reticle } from "../reticle/reticle";
 import "./game-screen.scss";
 import React from "react";
 import { TargetsDisplay } from "../targets-display/targets-display";
+import { TimerDisplay } from "../timer-display/timer-display";
 
 interface GameScreenProps {
   gameState: GameState;
@@ -18,6 +19,7 @@ export const GameScreen: React.FC<GameScreenProps> = observer(
           <Reticle />
           <AmmoDisplay gameState={gameState} />
           <TargetsDisplay gameState={gameState} />
+          <TimerDisplay gameState={gameState} />
         </div>
       </div>
     );

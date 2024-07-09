@@ -49,7 +49,6 @@ export class GameState {
     document.addEventListener("pointerlockerror", this.onPointerLockError);
 
     // Setup game scene
-    //this.scene.background = new THREE.Color("#1680AF");
     this.setupLights();
 
     const range = this.gameLoader.modelLoader.shootingRange;
@@ -98,6 +97,7 @@ export class GameState {
     this.renderPipeline.canvas.requestPointerLock();
     this.paused = false;
     this.mouseListener.enable();
+    this.targetManager.resumeTimer();
   };
 
   private onPointerLockChange = () => {
@@ -114,6 +114,7 @@ export class GameState {
   private pauseGame() {
     this.paused = true;
     this.mouseListener.disable();
+    this.targetManager.pauseTimer();
   }
 
   private setupCamera() {
@@ -181,7 +182,6 @@ export class GameState {
   private onMousedown = () => {
     // If looking at the generator, use it
     if (this.isLookingAtGenerator()) {
-      console.log("pressed generator");
       this.targetManager.resetAllTargets();
     }
   };

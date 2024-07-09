@@ -60,7 +60,7 @@ export class MouseListener {
   };
 
   private onMouseUpEvent = (e: MouseEvent) => {
-    this.lmb = !(e.button === 0);
+    this.lmb = false;
 
     this.triggerCallbacks("mouseup");
   };

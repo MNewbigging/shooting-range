@@ -1,9 +1,11 @@
 .ammo-display {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  padding: 50px;
+  right: 20px;
+  bottom: 20px;
+  padding: 10px;
   font-size: 28px;
   color: white;
   font-weight: bolder;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
 }

@@ -17,7 +17,8 @@ export const AmmoDisplay: React.FC<HudProps> = observer(({ gameState }) => {
 
   return (
     <div className="ammo-display">
-      Ammo {ammo} {ammo === 0 && <span>RELOAD (r)</span>}{" "}
+      {ammo === 0 && <span>RELOAD (r)</span>}
+      {ammo !== 0 && <span>Ammo {ammo}</span>}
     </div>
   );
 });

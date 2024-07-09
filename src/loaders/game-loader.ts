@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { action, makeAutoObservable, observable } from "mobx";
 
 import { ModelLoader } from "./model-loader";
-import { AnimLoader } from "./anim-loader";
 import { TextureLoader } from "./texture-loader";
+import { AudioLoader } from "./audio-loader";
 
 // This is a higher-order loader class that groups the various loaders together
 export class GameLoader {
@@ -11,7 +11,7 @@ export class GameLoader {
 
   readonly textureLoader = new TextureLoader();
   readonly modelLoader = new ModelLoader();
-  readonly animLoader = new AnimLoader();
+  readonly audioLoader = new AudioLoader();
 
   constructor() {
     makeAutoObservable(this);
@@ -23,12 +23,16 @@ export class GameLoader {
 
     this.textureLoader.load(this.onLoaderFinish);
     this.modelLoader.load(this.onLoaderFinish);
-    // this.animLoader.load(this.onLoaderFinish); // if adding, also check for doneLoading below
+    this.audioLoader.load(this.onLoaderFinish);
   }
 
   private onLoaderFinish = () => {
     // Simply check if all loaders have finished now
-    if (this.modelLoader.doneLoading && this.textureLoader.doneLoading) {
+    if (
+      this.modelLoader.doneLoading &&
+      this.textureLoader.doneLoading &&
+      this.audioLoader.doneLoading
+    ) {
       this.loading = false;
     }
   };

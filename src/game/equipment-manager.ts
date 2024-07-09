@@ -21,6 +21,7 @@ export class EquipmentManager {
   constructor(
     private scene: THREE.Scene,
     private camera: THREE.PerspectiveCamera,
+    private listener: THREE.AudioListener,
     private gameLoader: GameLoader,
     private keyboardListener: KeyboardListener,
     private mouseListener: MouseListener,
@@ -303,6 +304,20 @@ export class EquipmentManager {
 
     // Add it to the table guns
     this.tableGuns.push(pistolGun);
+
+    // Setup audio
+    const soundMap = new Map<string, THREE.PositionalAudio>();
+
+    const shotBuffer =
+      this.gameLoader.audioLoader.audioBuffers.get("pistol-shot");
+    if (shotBuffer) {
+      const shotSound = new THREE.PositionalAudio(this.listener);
+      shotSound.setBuffer(shotBuffer);
+      pistol.add(shotSound);
+      soundMap.set("shot", shotSound);
+    }
+
+    pistolGun.setSoundMap(soundMap);
   }
 
   private setupRifle() {

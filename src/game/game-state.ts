@@ -66,9 +66,14 @@ export class GameState {
 
     this.targetManager = new TargetManager(range, this.events);
 
+    // Audio
+    const listener = new THREE.AudioListener();
+    this.camera.add(listener);
+
     this.equipmentManager = new EquipmentManager(
       this.scene,
       this.camera,
+      listener,
       this.gameLoader,
       this.keyboardListener,
       this.mouseListener,

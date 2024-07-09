@@ -54,6 +54,8 @@ export class Gun {
   private mixer: THREE.AnimationMixer;
   private reloadAction?: THREE.AnimationAction;
 
+  private soundMap = new Map<string, THREE.PositionalAudio>();
+
   constructor(
     props: GunProps,
     private mouseListener: MouseListener,
@@ -128,6 +130,10 @@ export class Gun {
     this.enabled = false;
   }
 
+  setSoundMap(map: Map<string, THREE.PositionalAudio>) {
+    this.soundMap = map;
+  }
+
   setFiringMode(mode: FiringModeName) {
     this.firingMode.disable();
     this.firingMode = this.getFiringMode(mode);
@@ -185,6 +191,9 @@ export class Gun {
 
     // Spend a bullet
     this.magAmmo--;
+
+    // Audio
+    this.playAudio("shot");
 
     // Animate
     this.idleAnim.pause();
@@ -290,6 +299,15 @@ export class Gun {
     const decal = new THREE.Mesh(decalGeom, this.bulletDecalMaterial);
 
     this.scene.add(decal);
+  }
+
+  private playAudio(name: string) {
+    const sound = this.soundMap.get(name);
+    if (!sound) {
+      return;
+    }
+
+    sound.stop().play();
   }
 
   private onPressR = () => {

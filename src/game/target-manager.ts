@@ -27,7 +27,6 @@ export class TargetManager {
   @observable timerSeconds = 0;
 
   private targets: Target[] = [];
-  private timer?: THREE.Clock;
 
   // Needs to be given the range scene object to extract targets from
   constructor(rangeObject: THREE.Object3D, private events: EventListener) {
@@ -51,14 +50,6 @@ export class TargetManager {
     this.events.on("shot-intersect", this.onShotIntersect);
   }
 
-  pauseTimer() {
-    this.timer?.stop();
-  }
-
-  resumeTimer() {
-    this.timer?.start();
-  }
-
   @action resetAllTargets() {
     this.targets.forEach((target) => {
       if (target.flipped) {
@@ -66,6 +57,7 @@ export class TargetManager {
       }
     });
     this.targetsHit = 0;
+    this.timerSeconds = 0;
   }
 
   @action update(dt: number) {
@@ -74,9 +66,9 @@ export class TargetManager {
       this.moveSlider(target, dt);
     });
 
-    // Pull elapsed timer value into observable for ui
-    if (this.timer) {
-      this.timerSeconds = this.timer.getElapsedTime();
+    // Update timer
+    if (this.targetsHit > 0) {
+      this.timerSeconds += dt;
     }
   }
 
@@ -166,12 +158,6 @@ export class TargetManager {
     );
     if (!target) {
       return;
-    }
-
-    // If this was the first target hit, start the timer
-    if (this.targetsHit === 0) {
-      this.timer = new THREE.Clock();
-      this.timer.start();
     }
 
     // Is this target already flipped?

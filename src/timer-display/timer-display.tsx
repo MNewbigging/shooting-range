@@ -11,13 +11,20 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = observer(
   ({ gameState }) => {
     const totalSeconds = gameState.targetManager.timerSeconds;
 
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = Math.floor(totalSeconds % 60);
+    let displayString = ``;
 
-    return (
-      <div className="timer-display">
-        {minutes}:{seconds}
-      </div>
-    );
+    if (totalSeconds === 0) {
+      displayString = "-- : --";
+    } else {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = Math.floor(totalSeconds % 60);
+
+      const minString = minutes < 10 ? `0${minutes}` : `${minutes}`;
+      const secString = seconds < 10 ? `0${seconds}` : `${seconds}`;
+
+      displayString = `${minString}:${secString}`;
+    }
+
+    return <div className="timer-display">{displayString}</div>;
   }
 );

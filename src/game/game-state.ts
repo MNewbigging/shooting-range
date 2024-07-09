@@ -31,6 +31,8 @@ export class GameState {
   equipmentManager: EquipmentManager;
   generator: THREE.Object3D;
 
+  private clickSound?: THREE.PositionalAudio;
+
   constructor(private gameLoader: GameLoader) {
     makeAutoObservable(this);
 
@@ -64,11 +66,25 @@ export class GameState {
     this.generator = range.getObjectByName("Generator") ?? new THREE.Object3D();
     this.mouseListener.addListener("mousedown", this.onMousedown);
 
-    this.targetManager = new TargetManager(range, this.events);
-
     // Audio
     const listener = new THREE.AudioListener();
     this.camera.add(listener);
+    const clickBuffer = this.gameLoader.audioLoader.audioBuffers.get("click");
+    if (clickBuffer) {
+      const sound = new THREE.PositionalAudio(listener);
+      sound.setBuffer(clickBuffer);
+      sound.setRefDistance(10);
+      sound.setVolume(5);
+      this.generator.add(sound);
+      this.clickSound = sound;
+    }
+
+    this.targetManager = new TargetManager(
+      range,
+      this.events,
+      this.gameLoader,
+      listener
+    );
 
     this.equipmentManager = new EquipmentManager(
       this.scene,
@@ -186,6 +202,7 @@ export class GameState {
     // If looking at the generator, use it
     if (this.isLookingAtGenerator()) {
       this.targetManager.resetAllTargets();
+      this.clickSound?.stop().play();
     }
   };
 }

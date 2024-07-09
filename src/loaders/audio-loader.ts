@@ -84,5 +84,18 @@ export class AudioLoader {
     loader.load(rifleMagLoadUrl, (buffer) =>
       this.audioBuffers.set("rifle-mag-load", buffer)
     );
+
+    const clickUrl = new URL(
+      "/audio/Tractor Interior Buttons D.wav",
+      import.meta.url
+    ).href;
+    loader.load(clickUrl, (buffer) => this.audioBuffers.set("click", buffer));
+
+    const impactUrl = new URL("/audio/Drop Metal A.wav", import.meta.url).href;
+    loader.load(impactUrl, (buffer) => this.audioBuffers.set("impact", buffer));
+
+    const swapUrl = new URL("/audio/Kydex Holster 002.wav", import.meta.url)
+      .href;
+    loader.load(swapUrl, (buffer) => this.audioBuffers.set("swap", buffer));
   }
 }

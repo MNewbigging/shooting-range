@@ -3,12 +3,14 @@ import * as TWEEN from "@tweenjs/tween.js";
 import { getChildIncludesName, randomRange } from "../utils/utils";
 import { EventListener } from "../listeners/event-listener";
 import { action, makeAutoObservable, observable } from "mobx";
+import { GameLoader } from "../loaders/game-loader";
 
 interface Target {
   object: THREE.Object3D; // has a parent 'base' and child 'body'
   body: THREE.Object3D; // the 'body' child
   flipped: boolean; // whether it has been shot and is in the flipped state
   flipCooldown: number; // how long until this is flipped back upright
+  impactSound?: THREE.PositionalAudio;
 
   // Might be a moving target if it has these props
   sliderProps?: SliderProps;
@@ -27,10 +29,26 @@ export class TargetManager {
   @observable timerSeconds = 0;
 
   private targets: Target[] = [];
+  private impactSound?: THREE.PositionalAudio;
 
   // Needs to be given the range scene object to extract targets from
-  constructor(rangeObject: THREE.Object3D, private events: EventListener) {
+  constructor(
+    rangeObject: THREE.Object3D,
+    private events: EventListener,
+    private gameLoader: GameLoader,
+    private listener: THREE.AudioListener
+  ) {
     makeAutoObservable(this);
+
+    // Audio
+    const impactBuffer = this.gameLoader.audioLoader.audioBuffers.get("impact");
+    if (impactBuffer) {
+      const sound = new THREE.PositionalAudio(this.listener);
+      sound.setBuffer(impactBuffer);
+      sound.setRefDistance(30);
+      sound.setVolume(2);
+      this.impactSound = sound;
+    }
 
     // Targets should only be a top-level child
     rangeObject.children.forEach((child) => {
@@ -79,12 +97,19 @@ export class TargetManager {
       return;
     }
 
+    // Setup audio
+    const sound = this.impactSound;
+    if (sound) {
+      body.add(sound);
+    }
+
     // Create the target object
     const target: Target = {
       object,
       body: body,
       flipped: false,
       flipCooldown: 0,
+      impactSound: sound,
     };
 
     // If it's a slider, add slider props to the target
@@ -159,6 +184,9 @@ export class TargetManager {
     if (!target) {
       return;
     }
+
+    // play audio
+    target.impactSound?.stop().play();
 
     // Is this target already flipped?
     if (target.flipped) {

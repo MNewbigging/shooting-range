@@ -17,6 +17,7 @@ export class EquipmentManager {
   private equipping = false;
   private lowerAnim?: TWEEN.Tween<any>;
   private raiseAnim?: TWEEN.Tween<any>;
+  private swapSound?: THREE.Audio;
 
   constructor(
     private scene: THREE.Scene,
@@ -34,6 +35,14 @@ export class EquipmentManager {
 
     this.mouseListener.addListener("mousedown", this.onMouseDown);
     this.mouseListener.addListener("wheel", this.onMouseWheel);
+
+    // audio
+    const swapBuffer = this.gameLoader.audioLoader.audioBuffers.get("swap");
+    if (swapBuffer) {
+      const sound = new THREE.Audio(this.listener);
+      sound.setBuffer(swapBuffer);
+      this.swapSound = sound;
+    }
   }
 
   setup() {
@@ -168,6 +177,9 @@ export class EquipmentManager {
 
     // Ensure the gun is visible
     gun.object.visible = true;
+
+    // Play audio
+    this.swapSound?.stop().play();
 
     // Start the show animation
     await tilAnimEnd(TweenFactory.showGun(gun));

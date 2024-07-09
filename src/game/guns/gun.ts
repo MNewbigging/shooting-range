@@ -121,7 +121,7 @@ export class Gun {
 
     // Stop any active animations
     this.idleAnim.stop();
-    this.reloadAction?.stop().reset();
+    this.reloadAction?.stop();
 
     // Stop listening for input
     this.firingMode.disable();

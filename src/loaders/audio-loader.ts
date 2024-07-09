@@ -36,5 +36,21 @@ export class AudioLoader {
     loader.load(pistolDryTriggerUrl, (buffer) =>
       this.audioBuffers.set("pistol-dry-trigger", buffer)
     );
+
+    const unloadMagSoundUrl = new URL(
+      "/audio/45 ACP 1911 Pistol - Magazine Unload 001.wav",
+      import.meta.url
+    ).href;
+    loader.load(unloadMagSoundUrl, (buffer) =>
+      this.audioBuffers.set("unload-mag", buffer)
+    );
+
+    const loadMagSoundUrl = new URL(
+      "/audio/45 ACP 1911 Pistol - Magazine Load 001.wav",
+      import.meta.url
+    ).href;
+    loader.load(loadMagSoundUrl, (buffer) =>
+      this.audioBuffers.set("load-mag", buffer)
+    );
   }
 }

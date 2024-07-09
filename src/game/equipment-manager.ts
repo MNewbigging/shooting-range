@@ -325,6 +325,22 @@ export class EquipmentManager {
       soundMap.set("dry-trigger", sound);
     }
 
+    const unloadMagBuffer = audioBuffers.get("unload-mag");
+    if (unloadMagBuffer) {
+      const sound = new THREE.PositionalAudio(this.listener);
+      sound.setBuffer(unloadMagBuffer);
+      pistol.add(sound);
+      soundMap.set("unload-mag", sound);
+    }
+
+    const loadMagBuffer = audioBuffers.get("load-mag");
+    if (loadMagBuffer) {
+      const sound = new THREE.PositionalAudio(this.listener);
+      sound.setBuffer(loadMagBuffer);
+      pistol.add(sound);
+      soundMap.set("load-mag", sound);
+    }
+
     pistolGun.setSoundMap(soundMap);
   }
 

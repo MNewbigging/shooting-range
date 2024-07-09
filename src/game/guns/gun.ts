@@ -312,7 +312,19 @@ export class Gun {
   }
 
   private onPressR = () => {
+    if (this.magAmmo === this.magSize) {
+      return;
+    }
+
+    // Start the reload animation
     this.reloadAction?.reset().play();
+
+    // Play unload mag sound now
+    const unloadSound = this.soundMap.get("unload-mag");
+    unloadSound?.stop().play();
+
+    const loadSound = this.soundMap.get("load-mag");
+    setTimeout(() => loadSound?.stop().play(), 300);
   };
 
   private onReloadAnimationEnd = () => {

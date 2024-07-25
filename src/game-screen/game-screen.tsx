@@ -6,6 +6,7 @@ import "./game-screen.scss";
 import React from "react";
 import { TargetsDisplay } from "../targets-display/targets-display";
 import { TimerDisplay } from "../timer-display/timer-display";
+import { RecordDisplay } from "../record-display/record-display";
 
 interface GameScreenProps {
   gameState: GameState;
@@ -20,6 +21,7 @@ export const GameScreen: React.FC<GameScreenProps> = observer(
           <AmmoDisplay gameState={gameState} />
           <TargetsDisplay gameState={gameState} />
           <TimerDisplay gameState={gameState} />
+          <RecordDisplay gameState={gameState} />
         </div>
       </div>
     );

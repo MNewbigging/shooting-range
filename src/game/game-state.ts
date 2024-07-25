@@ -9,7 +9,6 @@ import { EventListener } from "../listeners/event-listener";
 import { RenderPipeline } from "./render-pipeline";
 import { TargetManager } from "./target-manager";
 import { EquipmentManager } from "./equipment-manager";
-import { addGui } from "../utils/utils";
 
 export class GameState {
   @observable paused = false;
@@ -60,6 +59,7 @@ export class GameState {
 
     const range = this.gameLoader.modelLoader.shootingRange;
     this.scene.add(range);
+    console.log(range);
 
     const spawn = range.getObjectByName("Spawn");
     if (spawn) {
@@ -174,6 +174,7 @@ export class GameState {
         const sound = new THREE.Audio(this.listener);
         sound.setBuffer(buffer);
         sound.setVolume(0.7);
+        sound.setLoop(true);
         this.radioTracks.push(sound);
       }
     });

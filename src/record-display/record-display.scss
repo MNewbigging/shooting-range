@@ -1,7 +1,7 @@
-.targets-display {
+.record-display {
   position: absolute;
+  top: 20px;
   left: 20px;
-  bottom: 20px;
   padding: 10px;
   font-size: 28px;
   border-radius: 2px;
@@ -9,6 +9,9 @@
   font-weight: bolder;
   background-color: rgba(0, 0, 0, 0.5);
 
-  display: flex;
-  flex-direction: column;
+  .separator {
+    width: 100%;
+
+    border-bottom: 2px solid white;
+  }
 }

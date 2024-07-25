@@ -27,6 +27,8 @@ export class TargetManager {
   @observable targetsHit = 0;
   targetsTotal = 0;
   @observable timerSeconds = 0;
+  @observable bestTime?: number;
+  @observable lastTime?: number;
 
   private targets: Target[] = [];
   private impactSound?: THREE.PositionalAudio;
@@ -206,7 +208,7 @@ export class TargetManager {
       .easing(TWEEN.Easing.Quadratic.Out)
       .onComplete(() => {
         if (wasLastTarget) {
-          this.resetAllTargets();
+          this.onHitAllTargets();
         }
       })
       .start();
@@ -214,5 +216,16 @@ export class TargetManager {
 
   private allTargetsFlipped() {
     return this.targets.every((target) => target.flipped);
+  }
+
+  private onHitAllTargets() {
+    this.lastTime = this.timerSeconds;
+
+    if (!this.bestTime || this.bestTime > this.lastTime) {
+      this.bestTime = this.lastTime;
+    }
+
+    // Reset for next run
+    this.resetAllTargets();
   }
 }

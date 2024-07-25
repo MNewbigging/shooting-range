@@ -38,3 +38,16 @@ export function randomId(length: number = 5) {
 
   return id;
 }
+
+export function getTimeDisplayString(totalSeconds?: number) {
+  if (!totalSeconds) {
+    return "-- : --";
+  }
+
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const minString = minutes < 10 ? `0${minutes}` : `${minutes}`;
+  const secString = seconds < 10 ? `0${seconds}` : `${seconds}`;
+
+  return `${minString}:${secString}`;
+}

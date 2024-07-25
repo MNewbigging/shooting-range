@@ -33,7 +33,10 @@ export class GameState {
   generator: THREE.Object3D;
   radio: THREE.Object3D;
 
+  private listener: THREE.AudioListener;
   private clickSound?: THREE.PositionalAudio;
+  private radioTracks: THREE.Audio[] = [];
+  private currentRadioTrack?: THREE.Audio;
 
   constructor(private gameLoader: GameLoader) {
     makeAutoObservable(this);
@@ -69,11 +72,11 @@ export class GameState {
     this.mouseListener.addListener("mousedown", this.onMousedown);
 
     // Audio
-    const listener = new THREE.AudioListener();
-    this.camera.add(listener);
+    this.listener = new THREE.AudioListener();
+    this.camera.add(this.listener);
     const clickBuffer = this.gameLoader.audioLoader.audioBuffers.get("click");
     if (clickBuffer) {
-      const sound = new THREE.PositionalAudio(listener);
+      const sound = new THREE.PositionalAudio(this.listener);
       sound.setBuffer(clickBuffer);
       sound.setRefDistance(10);
       sound.setVolume(5);
@@ -86,18 +89,19 @@ export class GameState {
     radio.position.set(2, 1, -7.5);
     this.scene.add(radio);
     this.radio = radio;
+    this.setupRadioTracks();
 
     // Managers
     this.targetManager = new TargetManager(
       range,
       this.events,
       this.gameLoader,
-      listener
+      this.listener
     );
     this.equipmentManager = new EquipmentManager(
       this.scene,
       this.camera,
-      listener,
+      this.listener,
       this.gameLoader,
       this.keyboardListener,
       this.mouseListener,
@@ -153,6 +157,26 @@ export class GameState {
     camera.near = 0.01;
 
     return camera;
+  }
+
+  private setupRadioTracks() {
+    [
+      "synth-80s",
+      "electronic",
+      "jazz",
+      "lofi",
+      "metal",
+      "zebra",
+      "synthwave",
+    ].forEach((name) => {
+      const buffer = this.gameLoader.audioLoader.audioBuffers.get(name);
+      if (buffer) {
+        const sound = new THREE.Audio(this.listener);
+        sound.setBuffer(buffer);
+        sound.setVolume(0.7);
+        this.radioTracks.push(sound);
+      }
+    });
   }
 
   private setupLights() {
@@ -224,8 +248,29 @@ export class GameState {
       this.targetManager.resetAllTargets();
       this.clickSound?.stop().play();
     } else if (this.isLookingAtRadio()) {
-      this.clickSound?.stop().play();
-      // Play a random new track
+      this.nextRadioTrack();
     }
   };
+
+  private nextRadioTrack() {
+    this.clickSound?.stop().play();
+
+    if (!this.currentRadioTrack) {
+      this.currentRadioTrack = this.radioTracks[0];
+      this.currentRadioTrack.play();
+
+      return;
+    }
+
+    const currentIndex = this.radioTracks.findIndex(
+      (track) => track === this.currentRadioTrack
+    );
+
+    const nextIndex =
+      currentIndex === this.radioTracks.length - 1 ? 0 : currentIndex + 1;
+
+    this.currentRadioTrack.stop();
+    this.currentRadioTrack = this.radioTracks[nextIndex];
+    this.currentRadioTrack.play();
+  }
 }

@@ -97,5 +97,49 @@ export class AudioLoader {
     const swapUrl = new URL("/audio/Kydex Holster 002.wav", import.meta.url)
       .href;
     loader.load(swapUrl, (buffer) => this.audioBuffers.set("swap", buffer));
+
+    const synth80s = new URL(
+      "/audio/80s Synth Rock Station Main.wav",
+      import.meta.url
+    ).href;
+    loader.load(synth80s, (buffer) =>
+      this.audioBuffers.set("synth-80s", buffer)
+    );
+
+    const electronic = new URL(
+      "/audio/Heavy Electronic Edge Main.wav",
+      import.meta.url
+    ).href;
+    loader.load(electronic, (buffer) =>
+      this.audioBuffers.set("electronic", buffer)
+    );
+
+    const jazz = new URL("/audio/Jazz Love Dance Main.wav", import.meta.url)
+      .href;
+    loader.load(jazz, (buffer) => this.audioBuffers.set("jazz", buffer));
+
+    const lofi = new URL("/audio/Lo-Fi Phat & Lazy Main.wav", import.meta.url)
+      .href;
+    loader.load(lofi, (buffer) => this.audioBuffers.set("lofi", buffer));
+
+    const metal = new URL(
+      "/audio/Metal Vol3 Sleeveless Main.wav",
+      import.meta.url
+    ).href;
+    loader.load(metal, (buffer) => this.audioBuffers.set("metal", buffer));
+
+    const rhythmic = new URL(
+      "/audio/Rhythmic Vol2 Zebra Main.wav",
+      import.meta.url
+    ).href;
+    loader.load(rhythmic, (buffer) => this.audioBuffers.set("zebra", buffer));
+
+    const synthwave = new URL(
+      "/audio/Synthwave Blue Sunset Main.wav",
+      import.meta.url
+    ).href;
+    loader.load(synthwave, (buffer) =>
+      this.audioBuffers.set("synthwave", buffer)
+    );
   }
 }

@@ -10,6 +10,7 @@ export class ModelLoader {
   shootingRange = this.createDebugObject();
   pistol = this.createDebugObject();
   rifle = this.createDebugObject();
+  radio = this.createDebugObject();
 
   private loadingManager = new THREE.LoadingManager();
 
@@ -31,6 +32,7 @@ export class ModelLoader {
   private loadModels = () => {
     const gltfLoader = new GLTFLoader(this.loadingManager);
     this.loadScene(gltfLoader);
+    this.loadRadio(gltfLoader);
 
     const fbxLoader = new FBXLoader(this.loadingManager);
     this.loadPistol(fbxLoader);
@@ -41,6 +43,16 @@ export class ModelLoader {
     const sceneUrl = new URL("/models/shootingRange.glb", import.meta.url).href;
     loader.load(sceneUrl, (gltf) => {
       this.shootingRange = gltf.scene;
+    });
+  }
+
+  private loadRadio(loader: GLTFLoader) {
+    const radioUrl = new URL("/models/radio.glb", import.meta.url).href;
+    loader.load(radioUrl, (gltf) => {
+      const group = gltf.scene;
+      //group.scale.multiplyScalar(0.1);
+      group.name = "radio";
+      this.radio = group;
     });
   }
 

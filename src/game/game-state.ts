@@ -9,6 +9,7 @@ import { EventListener } from "../listeners/event-listener";
 import { RenderPipeline } from "./render-pipeline";
 import { TargetManager } from "./target-manager";
 import { EquipmentManager } from "./equipment-manager";
+import { addGui } from "../utils/utils";
 
 export class GameState {
   @observable paused = false;
@@ -30,6 +31,7 @@ export class GameState {
   targetManager: TargetManager;
   equipmentManager: EquipmentManager;
   generator: THREE.Object3D;
+  radio: THREE.Object3D;
 
   private clickSound?: THREE.PositionalAudio;
 
@@ -79,13 +81,19 @@ export class GameState {
       this.clickSound = sound;
     }
 
+    const radio = this.gameLoader.modelLoader.radio;
+    radio.rotateY(-Math.PI / 2 + 0.1);
+    radio.position.set(2, 1, -7.5);
+    this.scene.add(radio);
+    this.radio = radio;
+
+    // Managers
     this.targetManager = new TargetManager(
       range,
       this.events,
       this.gameLoader,
       listener
     );
-
     this.equipmentManager = new EquipmentManager(
       this.scene,
       this.camera,
@@ -98,12 +106,14 @@ export class GameState {
     );
     this.equipmentManager.setup();
 
+    // Controls
     this.controls = new PointerLockControls(
       this.camera,
       this.renderPipeline.canvas
     );
     this.controls.addEventListener("change", this.onCameraMove);
 
+    // Skybox
     const hdri = this.gameLoader.textureLoader.get("hdri");
     if (hdri) {
       this.scene.environment = hdri;
@@ -179,10 +189,14 @@ export class GameState {
     // First clear any outlines for this frame
     this.renderPipeline.clearOutlines();
 
-    // Get the object to outline, if any
-    const lookingAtObject = this.isLookingAtGenerator()
-      ? this.generator
-      : this.equipmentManager.getLookedAtTableGun()?.object;
+    let lookingAtObject: THREE.Object3D | undefined;
+    if (this.isLookingAtGenerator()) {
+      lookingAtObject = this.generator;
+    } else if (this.isLookingAtRadio()) {
+      lookingAtObject = this.radio;
+    } else {
+      lookingAtObject = this.equipmentManager.getLookedAtTableGun()?.object;
+    }
 
     if (lookingAtObject) {
       this.renderPipeline.outlineObject(lookingAtObject);
@@ -198,11 +212,20 @@ export class GameState {
     return !!intersections.length;
   }
 
+  private isLookingAtRadio() {
+    this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
+    const intersections = this.raycaster.intersectObject(this.radio);
+    return !!intersections.length;
+  }
+
   private onMousedown = () => {
     // If looking at the generator, use it
     if (this.isLookingAtGenerator()) {
       this.targetManager.resetAllTargets();
       this.clickSound?.stop().play();
+    } else if (this.isLookingAtRadio()) {
+      this.clickSound?.stop().play();
+      // Play a random new track
     }
   };
 }
